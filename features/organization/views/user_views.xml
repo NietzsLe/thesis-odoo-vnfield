@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- User Kanban View - Custom -->
+    <record id="view_user_kanban_custom" model="ir.ui.view">
+        <field name="name">res.users.kanban.custom</field>
+        <field name="model">res.users</field>
+        <field name="priority" eval="16" />
+        <field name="arch" type="xml">
+            <!--
+            ┌────────────────────────────────────────────┐
+            │   🎴 CUSTOM USER KANBAN: CONTRACTOR INFO    │
+            │   Kanban view với contractor information     │
+            └────────────────────────────────────────────┘
+            -->
+            <kanban class="o_kanban_mobile" style="--o-kanban-columns: 4;" create="true"
+                quick_create="false">
+                <field name="name" />
+                <field name="login" />
+                <field name="email" />
+                <field name="image_128" />
+                <field name="contractor_id" />
+                <field name="user_type" />
+                <field name="external_id" />
+                <templates>
+                    <!-- Create Button Template -->
+                    <t t-name="kanban-menu">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a type="object" name="create"
+                                        class="btn btn-primary btn-sm btn-block">
+                                        <i class="fa fa-plus" /> New User </a>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click"
+                            style="padding: 10px; border-radius: 8px; position: relative; height: 130px; margin: 4px; box-sizing: border-box;">
+                            <div class="oe_kanban_global_click"></div>
+                            <div style="display: flex; align-items: flex-start; margin-bottom: 6px;">
+                                <!-- User Avatar - 32px -->
+                                <div
+                                    style="margin-right: 8px; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; border: 2px solid #e0e0e0; flex-shrink: 0;">
+                                    <field name="image_128" widget="image"
+                                        style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                                        alt="User Avatar" />
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <!-- Tên -->
+                                    <div
+                                        style="font-weight: bold; font-size: 1em; margin-bottom: 2px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        <span
+                                            style="color: #888; font-size: 0.85em; font-weight: 400;">
+                                            Tên: </span>
+                                        <t t-out="record.name.raw_value" />
+                                    </div>
+                                    <!-- User Type Chip -->
+                                    <div>
+                                        <span class="badge"
+                                            t-attf-style="padding: 2px 6px; border-radius: 6px; color: #fff; font-size: 0.7em; font-weight: 500; background: {{record.user_type.raw_value == 'internal' ? '#4caf50' : record.user_type.raw_value == 'external' ? '#2196f3' : '#ff9800'}};">
+                                            <t t-if="record.user_type.raw_value == 'internal'">Nội
+                                                bộ</t>
+                                            <t t-elif="record.user_type.raw_value == 'external'">Bên
+                                                ngoài</t>
+                                            <t t-else="">Liên nhà thầu</t>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 2px;">
+                                <!-- Login -->
+                                <div
+                                    style="font-size: 0.92em; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">Đăng
+                                        nhập: </span>
+                                    <t t-out="record.login.raw_value" />
+                                </div>
+                                <!-- Email -->
+                                <div
+                                    style="font-size: 0.92em; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                    t-if="record.email.raw_value">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">
+                                        Email: </span>
+                                    <t t-out="record.email.raw_value" />
+                                </div>
+                                <!-- Contractor info -->
+                                <div
+                                    style="font-size: 0.92em; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                    t-if="record.contractor_id.raw_value">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">Nhà
+                                        thầu: </span>
+                                    <t t-out="record.contractor_id.value" />
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+
+    <!-- User Form View - Custom standalone form with action buttons -->
+    <record id="view_user_form_custom" model="ir.ui.view">
+        <field name="name">res.users.form.custom</field>
+        <field name="model">res.users</field>
+        <field name="priority" eval="16" />
+        <field name="arch" type="xml">
+            <form string="User">
+                <header>
+                    <button string="Add to Project"
+                        type="object"
+                        name="action_add_to_project"
+                        class="btn-primary"
+                        help="Add this user to a project (only for same contractor users)"
+                        icon="fa-plus-square" />
+
+                    <button string="Register User"
+                        type="object"
+                        name="action_register_user"
+                        class="btn-secondary"
+                        help="Register this user to external system"
+                        icon="fa-user-plus"
+                        invisible="user_type != 'internal'" />
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button"
+                            icon="fa-archive">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span>Activate/Deactivate</span>
+                                <field name="active" widget="boolean_button"
+                                    options='{"terminology": "archive"}' />
+                            </div>
+                        </button>
+
+
+                    </div>
+
+                    <field name="image_1920" widget="image" class="oe_avatar"
+                        options="{'size': [90, 90]}" />
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="User Name..." required="1" />
+                        </h1>
+                        <h3>
+                            <field name="user_type" widget="badge" readonly="1" />
+                        </h3>
+                    </div>
+
+                    <group>
+                        <group string="Account Information" name="account_info">
+                            <field name="login_input" required="1" />
+                            <field name="email" />
+                            <field name="phone" />
+                            <field name="lang" />
+                        </group>
+
+                        <group string="Contractor Information" name="contractor_group">
+                            <field name="contractor_id" />
+                            <field name="user_type" readonly="1" />
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="External Integration" name="external_group">
+                            <field name="external_id" />
+                            <field name="external_login" />
+                            <field name="external_password" password="True" />
+                        </group>
+
+                        <group string="Quyền Hệ Thống VNField" name="vnfield_access_group">
+                            <field name="vnfield_groups_id" widget="many2many_tags"
+                                options="{'no_create': True, 'no_create_edit': True}" />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Additional Info" name="additional_info">
+                            <group>
+                                <group>
+                                    <field name="signature" />
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- User Tree View - Inherit from base -->
+    <record id="view_user_tree_inherit" model="ir.ui.view">
+        <field name="name">res.users.tree.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_tree" />
+        <field name="priority" eval="1" />
+        <field name="arch" type="xml">
+            <!--
+            ┌────────────────────────────────────────────┐
+            │   📋 EXTEND USER TREE: CONTRACTOR COLUMNS   │
+            │   Thêm các custom columns vào user tree     │
+            └────────────────────────────────────────────┘
+            -->
+            <!-- Thêm contractor column sau name column -->
+            <xpath expr="//field[@name='login']" position="after">
+                <field name="contractor_id" string="Contractor" optional="show" />
+                <field name="user_type" string="Type" optional="show" />
+                <field name="external_id" string="External ID" optional="hide" />
+            </xpath>
+        </field>
+    </record>
+
+    <!-- User Search View - Inherit from base -->
+    <record id="view_user_search_inherit" model="ir.ui.view">
+        <field name="name">res.users.search.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_search" />
+        <field name="priority" eval="16" />
+        <field name="arch" type="xml">
+            <!--
+            ┌────────────────────────────────────────────┐
+            │   🔍 EXTEND USER SEARCH: CONTRACTOR FILTERS │
+            │   Thêm các custom filters vào user search   │
+            └────────────────────────────────────────────┘
+            -->
+            <!-- Thêm contractor filters -->
+            <xpath expr="//search" position="inside">
+                <separator />
+                <filter string="Internal User" name="internal_user"
+                    domain="[('user_type','=','internal')]" />
+                <filter string="External User" name="external_user"
+                    domain="[('user_type','=','external')]" />
+                <filter string="With External ID" name="registered"
+                    domain="[('external_id','!=',False)]" />
+                <filter string="Without External ID" name="not_registered"
+                    domain="[('external_id','=',False)]" />
+
+                <separator />
+                <field name="contractor_id" string="Contractor" />
+                <field name="external_id" string="External ID" />
+
+                <group expand="0" string="Group By">
+                    <filter string="Contractor" name="group_contractor"
+                        context="{'group_by': 'contractor_id'}" />
+                    <filter string="User Type" name="group_user_type"
+                        context="{'group_by': 'user_type'}" />
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- User Action & Menu -->
+    <record id="action_user" model="ir.actions.act_window">
+        <field name="name">Users</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_ids"
+            eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_user_kanban_custom')}),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_user_tree_inherit')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_user_form_custom')})
+        ]" />
+        <field name="search_view_id" ref="view_user_search_inherit" />
+    </record>
+
+    <!-- 
+    🎯 ACTION FOR ONE2MANY: Action riêng cho One2many field trong contractor
+    Đảm bảo custom form view được sử dụng khi tạo user từ contractor
+    -->
+    <record id="action_user_from_contractor" model="ir.actions.act_window">
+        <field name="name">Contractor Users</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_ids"
+            eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_user_tree_inherit')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_user_form_custom')})
+        ]" />
+        <field name="search_view_id" ref="view_user_search_inherit" />
+        <field name="target">current</field>
+    </record>
+</odoo>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- 🏢 ORGANIZATION MAIN MENU -->
+        <menuitem id="menu_organization_root"
+            name="Organization"
+            sequence="10"
+            web_icon="vnfield,static/description/icon.png" />
+
+        <!-- Contractor Menu Item -->
+        <menuitem id="menu_contractor"
+            name="Contractors"
+            parent="menu_organization_root"
+            action="action_contractor"
+            sequence="10" />
+
+        <!-- Subcontractor Menu Item -->
+        <menuitem id="menu_subcontractor"
+            name="Subcontractors"
+            parent="menu_organization_root"
+            action="action_subcontractor"
+            sequence="20" />
+
+        <!-- 👥 TEAMS SUBMENU -->
+        <menuitem id="menu_teams"
+            name="Teams"
+            parent="menu_organization_root"
+            action="action_team"
+            sequence="20" />
+
+        <!-- 👤 USERS SUBMENU -->
+        <menuitem id="menu_users"
+            name="Users"
+            parent="menu_organization_root"
+            action="action_user"
+            sequence="30" />
+
+    </data>
+</odoo>

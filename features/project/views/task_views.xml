@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_vnfield_task_tree" model="ir.ui.view">
+        <field name="name">vnfield.task.tree</field>
+        <field name="model">vnfield.task</field>
+        <field name="arch" type="xml">
+            <tree string="Tasks"
+                decoration-success="status == 'completed'"
+                decoration-warning="status == 'in-progress'"
+                decoration-info="status == 'review'"
+                decoration-muted="status == 'draft'"
+                decoration-danger="status == 'on-hold'">
+                <field name="name" />
+                <field name="task_code" />
+                <field name="project_id" />
+                <field name="assignee_id" />
+                <field name="assigner_id" />
+                <field name="verifier_id" />
+                <field name="status" />
+                <field name="priority" />
+                <field name="deadline" />
+                <field name="estimated_hours" />
+                <field name="actual_hours" />
+            </tree>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ TASK FORM VIEW                                                                                   -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_task_form" model="ir.ui.view">
+        <field name="name">vnfield.task.form</field>
+        <field name="model">vnfield.task</field>
+        <field name="arch" type="xml">
+            <form string="Task">
+                <!-- 💡 NOTE(assistant): Converted from attrs to Odoo 17.0 invisible expressions -->
+                <header>
+                    <button name="action_start_task" type="object"
+                        string="Start Task"
+                        class="oe_highlight"
+                        invisible="status != 'draft'" />
+
+                    <button name="action_assign_task" type="object"
+                        string="Assign Task"
+                        invisible="status not in ['draft']" />
+
+                    <button name="action_submit_for_review" type="object"
+                        string="Submit for Review"
+                        invisible="status != 'in-progress'" />
+
+                    <button name="action_mark_done" type="object"
+                        string="Mark as Done"
+                        class="oe_highlight"
+                        invisible="status not in ['review']" />
+
+                    <button name="action_cancel_task" type="object"
+                        string="Cancel Task"
+                        invisible="status in ['completed', 'canceled']" />
+                    <!-- Temp -->
+                    <button name="action_send_task" type="object"
+                        string="Map external contractor"
+                        class="oe_highlight"
+                        invisible="status != 'draft'" />
+
+                    <field name="status" widget="statusbar"
+                        statusbar_visible="draft,planning,in-progress,review,completed" />
+                </header>
+
+                <sheet>
+                    <div
+                        style="background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" placeholder="Task Name..." required="1" />
+                            </h1>
+                            <h2>
+                                <field name="task_code" placeholder="Task Code (Optional)" />
+                            </h2>
+                        </div>
+
+                        <notebook>
+                            <page name="general" string="📋 General">
+                                <group>
+
+                                    <group string="Project Information">
+                                        <field name="project_id" required="1" />
+                                        <field name="task_type" widget="radio"
+                                            help="Internal: internal + shared users. Shared: chỉ shared + external users" />
+                                        <field name="external_id" invisible="task_type != 'shared'" />
+                                        <field name="status" />
+                                        <field name="priority" widget="priority" />
+                                    </group>
+                                    <group string="Assignment Info">
+                                        <field name="assigner_id" readonly="1" />
+                                        <!-- Temp -->
+                                        <field name="executer_id" />
+                                        <field name="verifier_id" readonly="1" />
+                                        <field name="is_outsourced" readonly="1" />
+                                        <field name="contractor_assignee_id" readonly="1"
+                                            invisible="not is_outsourced" />
+                                        <field name="assignee_id" readonly="1"
+                                            invisible="is_outsourced" />
+                                        <field name="outsource_project_id"
+                                            domain="[('outsourced_task_id', '=', id)]"
+                                            invisible="not is_outsourced" readonly="1" />
+                                    </group>
+                                </group>
+
+
+                                <group>
+                                    <field name="description" placeholder="Task description..." />
+                                </group>
+                            </page>
+
+                            <page name="scheduling" string="📅 Scheduling">
+                                <group>
+                                    <group name="progress" string="Progress Tracking">
+                                        <field name="progress" widget="percentage"
+                                            placeholder="0.0%"
+                                            help="Enter completion percentage (0-100)" />
+                                    </group>
+
+                                    <group name="time_estimates" string="Time Estimates">
+                                        <field name="estimated_hours" />
+                                        <field name="actual_hours" />
+                                    </group>
+
+                                    <group name="dates" string="Important Dates">
+                                        <field name="start_date" />
+                                        <field name="deadline" />
+                                        <field name="completed_date" readonly="1" />
+                                    </group>
+                                </group>
+                            </page>
+
+                            <page name="notes" string="📝 Notes">
+                                <field name="description" placeholder="Additional notes..." />
+                            </page>
+                        </notebook>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ TASK KANBAN VIEW                                                                                 -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_task_kanban" model="ir.ui.view">
+        <field name="name">vnfield.task.kanban</field>
+        <field name="model">vnfield.task</field>
+        <field name="arch" type="xml">
+            <!--
+            ┌────────────────────────────────────────────┐
+            │   📋 CLEAN TASK KANBAN CARDS                │
+            │   Tương tự project cards với bo góc         │
+            └────────────────────────────────────────────┘
+            -->
+            <kanban default_group_by="status">
+                <field name="name" />
+                <field name="task_code" />
+                <field name="task_type" />
+                <field name="description" />
+                <field name="project_id" />
+                <field name="assignee_id" />
+                <field name="assigner_id" />
+                <field name="verifier_id" />
+                <field name="status" />
+                <field name="priority" />
+                <field name="deadline" />
+                <field name="estimated_hours" />
+                <field name="actual_hours" />
+                <field name="progress" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <!-- Set variables from record fields -->
+                        <t t-set="name" t-value="record.name.value" />
+                        <t t-set="task_code" t-value="record.task_code.value || ''" />
+                        <t t-set="task_type" t-value="record.task_type.raw_value" />
+                        <t t-set="description" t-value="record.description.value || ''" />
+                        <t t-set="project_name" t-value="record.project_id.value || ''" />
+                        <t t-set="assignee_name" t-value="record.assignee_id.value || ''" />
+                        <t t-set="assigner_name" t-value="record.assigner_id.value || ''" />
+                        <t t-set="verifier_name" t-value="record.verifier_id.value || ''" />
+                        <t t-set="status" t-value="record.status.raw_value" />
+                        <t t-set="priority" t-value="record.priority.value || 'normal'" />
+                        <t t-set="deadline" t-value="record.deadline.value || ''" />
+                        <t t-set="estimated_hours" t-value="record.estimated_hours.value || 0" />
+                        <t t-set="actual_hours" t-value="record.actual_hours.value || 0" />
+                        <t t-set="progress"
+                            t-value="record.progress.value?record.progress.value*100: 0" />
+                        <t t-set="is_outsourced"
+                            t-value="record.is_outsourced ? record.is_outsourced.raw_value : false" />
+                        <t t-set="outsource_project_name"
+                            t-value="record.outsource_project_id and record.outsource_project_id.value ? record.outsource_project_id.value: ''" />
+
+                        <div class="oe_kanban_card"
+                            style="background: #fff; border: 1px solid #ddd; padding: 12px; margin: 8px; cursor: pointer; border-radius: 12px;">
+                            <div class="oe_kanban_global_click"></div>
+
+                            <!-- Header with Task Name and Badges -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                <div style="flex: 1; min-width: 0; margin-right: 8px;">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">
+                                        Task: </span>
+                                    <span style="font-weight: bold; font-size: 1.05em; color: #333;">
+                                        <t t-out="name" />
+                                    </span>
+                                    <t t-if="is_outsourced">
+                                        <span class="badge"
+                                            style="background:#d32f2f; color:#fff; margin-left:8px;">
+                                            Outsourced</span>
+                                    </t>
+                                </div>
+                                <div style="display: flex; gap: 4px; align-items: center;">
+                                    <!-- Task Type Badge (định dạng giống Status Badge) -->
+                                    <span class="badge"
+                                        t-attf-style="padding: 3px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold; background: {{ task_type == 'internal' ? '#1976d2' : (task_type == 'shared' ? '#e91e63' : '#9e9e9e') }};">
+                                        <t t-if="task_type == 'internal'">Internal</t>
+                                        <t t-elif="task_type == 'shared'">Shared</t>
+                                        <t t-else="">Other</t>
+                                    </span>
+                                    <!-- Status Badge -->
+                                    <span class="badge"
+                                        t-attf-style="padding: 3px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold; background: {{ status == 'completed' ? '#4caf50' : (status == 'in-progress' ? '#ff9800' : (status == 'review' ? '#9c27b0' : (status == 'draft' ? '#9e9e9e' : (status == 'on-hold' ? '#f44336' : '#9e9e9e')))) }};">
+                                        <t t-out="record.status.value" />
+                                    </span>
+                                </div>
+                            </div>
+                            <div t-if="outsource_project_name"
+                                style="color:#888; font-size:0.9em; margin-bottom: 8px;"> Outsource
+                                Project: <t t-out="outsource_project_name" />
+                            </div>
+
+                            <!-- Project Info -->
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">Dự
+                                    án: </span>
+                                <span style="font-weight: 500; color: #333;">
+                                    <t t-out="project_name || 'Chưa có'" />
+                                </span>
+                            </div>
+
+                            <!-- Task Code -->
+                            <div t-if="task_code" style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">
+                                    Code: </span>
+                                <span style="color: #666; font-size: 0.9em; font-family: monospace;">
+                                    <t t-out="task_code" />
+                                </span>
+                            </div>
+
+                            <!-- Task Description - Truncated to 2 lines -->
+                            <div t-if="description" style="margin-bottom: 8px;">
+                                <div
+                                    style="color: #555; font-size: 0.85em; line-height: 1.3; 
+                                    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; 
+                                    -webkit-box-orient: vertical; word-wrap: break-word;">
+                                    <t t-out="description" />
+                                </div>
+                            </div>
+
+                            <!-- Team Members Row -->
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                <!-- User Roles -->
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; flex: 1;">
+                                    <div t-if="assignee_name" style="color: #888; font-size: 0.8em;">
+                                        Assignee: <span style="color: #333; font-weight: 500;">
+                                            <t t-out="assignee_name" />
+                                        </span>
+                                    </div>
+                                    <div t-if="verifier_name" style="color: #888; font-size: 0.8em;">
+                                        Verifier: <span style="color: #333; font-weight: 500;">
+                                            <t t-out="verifier_name" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Statistics Row -->
+                            <div
+                                style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.85em; gap: 16px;">
+                                <div style="display: flex; gap: 16px; flex: 1;">
+                                    <div t-if="deadline" style="color: #666;">
+                                        <span style="color: #888;">Deadline: </span>
+                                        <span style="font-weight: 500; color: #333;">
+                                            <t t-out="deadline" />
+                                        </span>
+                                    </div>
+                                    <div t-if="estimated_hours > 0" style="color: #666;">
+                                        <span style="color: #888;">Hours: </span>
+                                        <span style="font-weight: bold; color: #1976d2;">
+                                            <t t-out="estimated_hours" />h </span>
+                                    </div>
+                                    <div t-if="priority != 'normal'" style="color: #666;">
+                                        <span style="color: #888;">Priority: </span>
+                                        <span
+                                            t-attf-style="font-weight: bold; color: {{ priority == 'urgent' ? '#d32f2f' : (priority == 'high' ? '#f57c00' : '#388e3c') }};">
+                                            <t t-out="record.priority.value" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div t-if="progress > 0" style="margin-top: 8px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <span style="color: #888; font-size: 0.8em;">Progress:</span>
+                                    <span style="color: #333; font-size: 0.8em; font-weight: 500;">
+                                        <t t-out="Math.round(progress)" />% </span>
+                                </div>
+                                <div
+                                    style="background: #e0e0e0; border-radius: 8px; height: 6px; overflow: hidden;">
+                                    <div
+                                        t-attf-style="background: {{ status == 'completed' ? '#4caf50' : (status == 'in-progress' ? '#ff9800' : (status == 'review' ? '#9c27b0' : '#2196f3')) }}; height: 100%; border-radius: 8px; width: {{ Math.round(progress) }}%; transition: width 0.3s ease;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ TASK SEARCH VIEW                                                                                 -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_task_search" model="ir.ui.view">
+        <field name="name">vnfield.task.search</field>
+        <field name="model">vnfield.task</field>
+        <field name="arch" type="xml">
+            <search string="Search Tasks">
+                <field name="name" />
+                <field name="task_code" />
+                <field name="description" />
+                <field name="project_id" />
+                <field name="assignee_id" />
+                <field name="assigner_id" />
+                <field name="verifier_id" />
+
+                <!-- Filters -->
+                <separator />
+                <filter string="My Tasks" name="my_tasks"
+                    domain="[('assignee_id', '=', uid)]" />
+                <filter string="Assigned by Me" name="assigned_by_me"
+                    domain="[('assigner_id', '=', uid)]" />
+                <filter string="To Verify" name="to_verify"
+                    domain="[('verifier_id', '=', uid), ('status', '=', 'review')]" />
+
+                <!-- Status Filters -->
+                <separator />
+                <filter string="Draft" name="draft"
+                    domain="[('status', '=', 'draft')]" />
+                <filter string="In Progress" name="in_progress"
+                    domain="[('status', '=', 'in-progress')]" />
+                <filter string="Under Review" name="review"
+                    domain="[('status', '=', 'review')]" />
+                <filter string="Completed" name="completed"
+                    domain="[('status', '=', 'completed')]" />
+                <filter string="High Priority" name="high_priority"
+                    domain="[('priority', 'in', ['2', '3'])]" />
+                <filter string="Overdue" name="overdue"
+                    domain="[('deadline', '&lt;', context_today()), ('status', '!=', 'completed')]" />
+
+                <!-- Group By -->
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_status" domain="[]"
+                        context="{'group_by': 'status'}" />
+                    <filter string="Project" name="group_project" domain="[]"
+                        context="{'group_by': 'project_id'}" />
+                    <filter string="Assignee" name="group_assignee" domain="[]"
+                        context="{'group_by': 'assignee_id'}" />
+                    <filter string="Assigner" name="group_assigner" domain="[]"
+                        context="{'group_by': 'assigner_id'}" />
+                    <filter string="Priority" name="group_priority" domain="[]"
+                        context="{'group_by': 'priority'}" />
+                    <filter string="Deadline" name="group_deadline" domain="[]"
+                        context="{'group_by': 'deadline'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

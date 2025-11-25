@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 📋 REMOTE REQUIREMENT LIST VIEW -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <record id="view_remote_requirement_tree" model="ir.ui.view">
+            <field name="name">vnfield.market.remote.requirement.tree</field>
+            <field name="model">vnfield.market.remote.requirement</field>
+            <field name="arch" type="xml">
+                <tree string="Remote Requirements" create="false" edit="true" delete="true">
+                    <header>
+                        <button name="action_open_create_wizard" type="object"
+                            string="Create New Remote Requirement" class="btn-primary"
+                            display="always" />
+                    </header>
+                    <field name="title" />
+                    <field name="project_name" />
+                    <field name="subcontractor_name" />
+                    <field name="work_category" />
+                    <field name="required_experience_years" />
+                    <field name="required_team_size" />
+                    <field name="budget_min" widget="monetary" />
+                    <field name="budget_max" widget="monetary" />
+                    <field name="currency_id" invisible="1" />
+                    <field name="project_start_date" />
+                    <field name="project_duration" />
+                    <field name="priority" decoration-danger="priority == 'urgent'"
+                        decoration-warning="priority == 'high'" />
+                    <field name="state" decoration-success="state == 'waiting_match'"
+                        decoration-info="state == 'matched'" decoration-muted="state == 'inactive'" />
+                    <field name="location" />
+                    <field name="match_count" />
+                    <button name="action_open_form" type="object" icon="fa-external-link"
+                        title="Open Form View" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 📋 REMOTE REQUIREMENT FORM VIEW -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <record id="view_remote_requirement_form" model="ir.ui.view">
+            <field name="name">vnfield.market.remote.requirement.form</field>
+            <field name="model">vnfield.market.remote.requirement</field>
+            <field name="arch" type="xml">
+                <form string="Remote Requirement" create="false" edit="true" delete="true">
+                    <header>
+                        <field name="state" widget="statusbar"
+                            statusbar_visible="waiting_match,matched,inactive" />
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="title" placeholder="Remote Requirement Title" />
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group string="Project Information">
+                                <field name="project_name" readonly="id > 0" />
+                                <field name="subcontractor_name" readonly="id > 0" />
+                                <field name="work_category" />
+                                <field name="location" />
+                                <field name="priority" widget="priority" />
+                            </group>
+                            <group string="Requirements">
+                                <field name="required_experience_years" />
+                                <field name="required_team_size" />
+                                <field name="match_count" readonly="1" />
+                            </group>
+                        </group>
+
+                        <group>
+                            <group string="Budget">
+                                <field name="currency_id" />
+                                <field name="budget_min" widget="monetary" />
+                                <field name="budget_max" widget="monetary" />
+                            </group>
+                            <group string="Timeline">
+                                <field name="project_start_date" />
+                                <field name="project_end_date" />
+                                <field name="project_duration" string="Duration (months)" />
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Description">
+                                <field name="description" widget="html" />
+                            </page>
+                            <page string="Technical Info">
+                                <group>
+                                    <field name="id" readonly="1" />
+                                    <field name="project_id" readonly="1" />
+                                    <field name="subcontractor_id" readonly="1" />
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🔍 REMOTE REQUIREMENT SEARCH VIEW -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <record id="view_remote_requirement_search" model="ir.ui.view">
+            <field name="name">vnfield.market.remote.requirement.search</field>
+            <field name="model">vnfield.market.remote.requirement</field>
+            <field name="arch" type="xml">
+                <search string="Search Remote Requirements">
+                    <field name="title" string="Title" filter_domain="[('title', 'ilike', self)]" />
+                    <field name="project_name" string="Project"
+                        filter_domain="[('project_name', 'ilike', self)]" />
+                    <field name="subcontractor_name" string="Subcontractor"
+                        filter_domain="[('subcontractor_name', 'ilike', self)]" />
+                    <field name="work_category" />
+                    <field name="location" />
+                    <separator />
+                    <filter string="Waiting Match" name="waiting_match"
+                        domain="[('state', '=', 'waiting_match')]" />
+                    <filter string="Matched" name="matched" domain="[('state', '=', 'matched')]" />
+                    <filter string="Inactive" name="inactive" domain="[('state', '=', 'inactive')]" />
+                    <separator />
+                    <filter string="Urgent" name="urgent" domain="[('priority', '=', 'urgent')]" />
+                    <filter string="High Priority" name="high_priority"
+                        domain="[('priority', '=', 'high')]" />
+                    <filter string="Medium Priority" name="medium_priority"
+                        domain="[('priority', '=', 'medium')]" />
+                    <filter string="Low Priority" name="low_priority"
+                        domain="[('priority', '=', 'low')]" />
+                    <separator />
+                    <filter string="Starting This Month" name="starting_this_month"
+                        domain="[('project_start_date', '>=', (context_today() + relativedelta(day=1)).strftime('%Y-%m-%d')),
+                                     ('project_start_date', '&lt;', (context_today() + relativedelta(months=1, day=1)).strftime('%Y-%m-%d'))]" />
+                    <filter string="Starting Next Month" name="starting_next_month"
+                        domain="[('project_start_date', '>=', (context_today() + relativedelta(months=1, day=1)).strftime('%Y-%m-%d')),
+                                     ('project_start_date', '&lt;', (context_today() + relativedelta(months=2, day=1)).strftime('%Y-%m-%d'))]" />
+                    <separator />
+                    <group expand="0" string="Group By">
+                        <filter string="Work Category" name="group_work_category"
+                            context="{'group_by': 'work_category'}" />
+                        <filter string="Priority" name="group_priority"
+                            context="{'group_by': 'priority'}" />
+                        <filter string="State" name="group_state" context="{'group_by': 'state'}" />
+                        <filter string="Project" name="group_project"
+                            context="{'group_by': 'project_name'}" />
+                        <filter string="Subcontractor" name="group_subcontractor"
+                            context="{'group_by': 'subcontractor_name'}" />
+                        <filter string="Location" name="group_location"
+                            context="{'group_by': 'location'}" />
+                        <filter string="Start Date" name="group_start_date"
+                            context="{'group_by': 'project_start_date:month'}" />
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🎯 REMOTE REQUIREMENT ACTION -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <record id="action_remote_requirement" model="ir.actions.act_window">
+            <field name="name">Remote Requirements</field>
+            <field name="res_model">vnfield.market.remote.requirement</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_remote_requirement_tree" />
+            <field name="search_view_id" ref="view_remote_requirement_search" />
+            <field name="context">{
+                'search_default_waiting_match': 1,
+                'default_state': 'waiting_match',
+                'default_priority': 'medium'
+                }</field>
+            <field name="domain">[]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No remote requirements found!
+                </p>
+                <p>
+                    Click "Create" to add a new remote requirement.
+                    Remote requirements are stored on the integration server.
+                </p>
+            </field>
+        </record>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🧙‍♂️ CREATE WIZARD ACTION - Moved to dedicated file -->
+        <!-- ═══════════════════════════════════════════ -->
+
+    </data>
+</odoo>

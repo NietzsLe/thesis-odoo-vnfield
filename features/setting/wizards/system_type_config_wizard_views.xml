@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 
+    =====================================================
+    🏗️ SYSTEM TYPE CONFIGURATION WIZARD VIEWS
+    =====================================================
+    
+    Mô tả: Views cho wizard cấu hình loại hệ thống
+    Hỗ trợ: Integration System và Contractor System configuration
+    -->
+
+    <!-- ==========================================
+         🏗️ FORM VIEW - System Type Configuration Wizard
+         ========================================== -->
+    <record id="view_system_type_config_wizard_form" model="ir.ui.view">
+        <field name="name">vnfield.system.type.config.wizard.form</field>
+        <field name="model">vnfield.system.type.config.wizard</field>
+        <field name="arch" type="xml">
+            <form string="🏗️ System Type Configuration">
+
+                <!-- HEADER SECTION -->
+                <div class="oe_title mb16">
+                    <h1>
+                        <field name="system_type" widget="radio" options="{'horizontal': true}"
+                            class="oe_inline" />
+                    </h1>
+                    <p class="text-muted">
+                        Configure your system type and integration settings
+                    </p>
+                </div>
+
+                <!-- MAIN CONFIGURATION SHEET -->
+                <sheet>
+
+                    <!-- BASIC SYSTEM CONFIGURATION -->
+                    <group name="basic_config" string="🏗️ Basic System Configuration">
+                        <group name="system_info" string="System Information">
+                            <field name="system_name"
+                                placeholder="e.g., VNField Central, Contractor ABC, etc."
+                                help="Unique name to identify this system instance" />
+                        </group>
+                    </group>
+
+                    <!-- INTEGRATION SYSTEM CONNECTION -->
+                    <group name="integration_connection"
+                        string="🔗 Integration System Connection"
+                        invisible="not show_integration_config">
+
+                        <group name="server_config" string="Server Configuration">
+                            <field name="integration_server_url"
+                                placeholder="https://integration.vnfield.com"
+                                required="system_type == 'contractor'" />
+                        </group>
+
+                    </group>
+
+                    <!-- HIDDEN COMPUTED FIELDS -->
+                    <field name="show_integration_config" invisible="1" />
+
+                </sheet>
+
+                <!-- FOOTER BUTTONS -->
+                <footer>
+                    <div class="row">
+
+                        <!-- RIGHT SIDE BUTTONS - Main Actions -->
+                        <div class="col-md-12 text-right">
+
+                            <button string="Cancel"
+                                class="btn-secondary"
+                                special="cancel" />
+
+                            <button name="action_save_configuration"
+                                type="object"
+                                string="💾 Save Configuration"
+                                class="btn-primary ms-2" />
+                        </div>
+
+                    </div>
+                </footer>
+
+            </form>
+        </field>
+    </record>
+
+    <!-- ==========================================
+         🎯 ACTION - Open System Type Configuration Wizard
+         ========================================== -->
+    <record id="action_system_type_config_wizard" model="ir.actions.act_window">
+        <field name="name">🏗️ System Type Configuration</field>
+        <field name="res_model">vnfield.system.type.config.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_system_type_config_wizard_form" />
+        <field name="target">new</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                🏗️ Configure System Type
+            </p>
+            <p>
+                Choose between Integration System or Contractor System.
+                Contractor System requires Integration Server URL configuration.
+            </p>
+            <div class="mt16">
+                <p><strong>🏢 Integration System:</strong> Central management system</p>
+                <p><strong>🏗️ Contractor System:</strong> Contractor system connecting to
+                    Integration System</p>
+            </div>
+        </field>
+    </record>
+    <menuitem id="menu_system_type_config"
+        name="System Type Configuration"
+        parent="vnfield_setting_config_menu"
+        action="action_system_type_config_wizard"
+        sequence="10" />
+</odoo>

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sync_request_admin,vnfield.sync.request.admin,model_vnfield_sync_request,vnfield.group_vnfield_admin,1,0,0,1
+access_pubsub_service_admin,pubsub.service.admin,model_vnfield_pubsub_service,vnfield.group_vnfield_admin,1,1,1,1
+access_sync_request_user,vnfield.sync.request.user,model_vnfield_sync_request,base.group_user,1,0,0,0
+access_pubsub_service_user,pubsub.service.user,model_vnfield_pubsub_service,base.group_user,1,1,1,1
+access_sync_request_system,vnfield.sync.request.system,model_vnfield_sync_request,base.group_system,1,1,1,1
+access_pubsub_service_system,pubsub.service.system,model_vnfield_pubsub_service,base.group_system,1,1,1,1

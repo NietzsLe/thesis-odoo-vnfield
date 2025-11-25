@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 
+    ╔═══════════════════════════════════════════════╗
+    ║           ⚙️ KAFKA CONFIGURATION VIEWS        ║
+    ║                                               ║
+    ║  Views for Kafka Configuration Wizard         ║
+    ║  - Form view with organized sections          ║
+    ║  - Action and menu definitions                ║
+    ╚═══════════════════════════════════════════════╝
+    -->
+
+    <!-- Kafka Configuration Wizard Form View -->
+    <record id="view_kafka_config_wizard_form" model="ir.ui.view">
+        <field name="name">kafka.config.wizard.form</field>
+        <field name="model">vnfield.kafka.config.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Kafka Configuration">
+                <!-- Header với buttons chính -->
+                <header>
+                    <button name="action_save_configuration"
+                        string="Save Configuration"
+                        type="object"
+                        class="btn-primary"
+                        confirm="Are you sure you want to save these configurations to system parameters?" />
+                    <button name="action_test_connection"
+                        string="Test Connection"
+                        type="object"
+                        class="btn-secondary" />
+                    <button name="action_test_pubsub"
+                        string="🧪 Test Pub/Sub"
+                        type="object"
+                        class="btn-info"
+                        confirm="This will test Kafka pub/sub functionality by sending a test message. Continue?" />
+                    <button name="action_reset_to_defaults"
+                        string="Reset to Defaults"
+                        type="object"
+                        class="btn-warning"
+                        confirm="This will reset all fields to default values. Continue?" />
+                </header>
+
+                <sheet>
+                    <!-- Connection Status -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="bootstrap_servers" placeholder="localhost:9092"
+                                style="font-size: 24px; width: 100%;" />
+                        </h1>
+                        <h2>Kafka Configuration</h2>
+                    </div>
+
+                    <!-- Connection Status Display -->
+                    <group name="status_group" string="Connection Status"
+                        invisible="connection_status == False">
+                        <field name="connection_status" nolabel="1"
+                            widget="text"
+                            options="{'codeview': true}"
+                            readonly="1" />
+                    </group>
+
+                    <!-- Pub/Sub Test Status Display -->
+                    <group name="test_status_group" string="🧪 Pub/Sub Test Status"
+                        invisible="test_status == 'not_started'">
+                        <field name="test_status" widget="badge"
+                            decoration-success="test_status == 'passed'"
+                            decoration-warning="test_status == 'testing'"
+                            decoration-danger="test_status in ['failed', 'timeout']" />
+                        <field name="last_test_time" />
+                        <field name="test_message" nolabel="1" widget="text" readonly="1"
+                            invisible="test_message == False" />
+                    </group>
+
+                    <notebook>
+                        <!-- Tab 1: Kafka Basic Configuration -->
+                        <page string="Kafka Basic" name="kafka_basic_config">
+                            <group string="Connection Settings">
+                                <field name="bootstrap_servers"
+                                    placeholder="kafka1:9092,kafka2:9092"
+                                    help="Comma-separated list of Kafka brokers" />
+                                <field name="security_protocol"
+                                    widget="radio"
+                                    options="{'horizontal': true}" />
+                            </group>
+
+                            <div class="alert alert-info" role="alert">
+                                <strong>Note:</strong><br /> • PLAINTEXT: No encryption or
+                                authentication<br /> • SSL: Encryption with SSL/TLS<br /> •
+                                SASL_PLAINTEXT: Authentication without encryption<br /> • SASL_SSL:
+                                Authentication with SSL/TLS encryption </div>
+                        </page>
+
+                        <!-- Tab 2: Kafka SASL Authentication -->
+                        <page string="Kafka SASL"
+                            name="kafka_sasl_config"
+                            invisible="show_sasl_config == False">
+                            <group string="SASL Settings">
+                                <field name="show_sasl_config" invisible="1" />
+                                <field name="sasl_mechanism"
+                                    required="show_sasl_config == True" />
+                                <field name="sasl_username"
+                                    required="show_sasl_config == True" />
+                                <field name="sasl_password"
+                                    password="true"
+                                    required="show_sasl_config == True" />
+                            </group>
+
+                            <div class="alert alert-info" role="alert">
+                                <strong>SASL Mechanisms:</strong><br /> • <strong>PLAIN:</strong>
+                                Simple username/password<br /> • <strong>SCRAM-SHA-256/512:</strong>
+                                Secure challenge-response<br /> • <strong>GSSAPI:</strong> Kerberos
+                                authentication<br /> • <strong>OAUTHBEARER:</strong> OAuth 2.0
+                                bearer tokens </div>
+                        </page>
+
+                        <!-- Tab 3: Kafka SSL/TLS Configuration -->
+                        <page string="Kafka SSL"
+                            name="kafka_ssl_config"
+                            invisible="show_ssl_config == False">
+                            <group string="Certificate Files">
+                                <field name="show_ssl_config" invisible="1" />
+                                <field name="ssl_ca_location"
+                                    placeholder="/path/to/ca-certificate.pem" />
+                                <field name="ssl_certificate_location"
+                                    placeholder="/path/to/client-certificate.pem" />
+                                <field name="ssl_key_location"
+                                    placeholder="/path/to/client-key.pem" />
+                            </group>
+
+                            <div class="alert alert-warning" role="alert">
+                                <strong>SSL Certificate Requirements:</strong><br /> • <strong>CA
+                                Certificate:</strong> Certificate Authority file<br /> • <strong>Client
+                                Certificate:</strong> Client public certificate<br /> • <strong>Private
+                                Key:</strong> Client private key file<br /><br />
+                                        <strong>File
+                                    paths must be accessible by Odoo process</strong>
+                            </div>
+                        </page>
+
+                        <!-- Tab 4: Kafka Producer Configuration -->
+                        <page string="Kafka Producer" name="kafka_producer_config">
+                            <group>
+                                <group string="Message Delivery">
+                                    <field name="producer_acks"
+                                        widget="radio" />
+                                    <field name="producer_retries"
+                                        placeholder="3" />
+                                </group>
+
+                                <group string="Performance">
+                                    <field name="producer_batch_size"
+                                        placeholder="16384" />
+                                    <field name="producer_linger_ms"
+                                        placeholder="5" />
+                                </group>
+                            </group>
+
+                            <div class="alert alert-info" role="alert">
+                                <strong>Producer Configuration:</strong><br /> • <strong>Acks
+                                    0:</strong> No acknowledgment (fastest, least reliable)<br /> • <strong>Acks
+                                1:</strong> Leader acknowledgment (balanced)<br /> • <strong>Acks
+                                all:</strong> Full ISR acknowledgment (slowest, most reliable)<br /><br />
+                                • <strong>Batch Size:</strong> Larger batches = better
+                                compression/throughput<br /> • <strong>Linger:</strong> Wait time to
+                                build batches (trade latency for throughput) </div>
+                        </page>
+
+                        <!-- Tab 5: Kafka Consumer Configuration -->
+                        <page string="Kafka Consumer" name="kafka_consumer_config">
+                            <group>
+                                <group string="Offset Management">
+                                    <field name="consumer_auto_offset_reset"
+                                        widget="radio" />
+                                    <field name="consumer_auto_commit" />
+                                </group>
+
+                                <group string="Timeouts">
+                                    <field name="consumer_session_timeout"
+                                        placeholder="30000" />
+                                    <field name="consumer_heartbeat_interval"
+                                        placeholder="10000" />
+                                </group>
+                            </group>
+                            <!--
+                            ┌────────────────────────────────────────────┐
+                            │   ℹ️ VÙNG THÔNG TIN: CONSUMER CONFIGURATION │
+                            │   - Hiển thị thông tin cấu hình consumer    │
+                            └────────────────────────────────────────────┘
+                            -->
+                            <div class="alert alert-info" role="alert">
+                                <strong>Consumer Configuration:</strong><br /> • <strong>Earliest:</strong>
+                                Start from beginning of topic<br /> • <strong>Latest:</strong> Start
+                                from end of topic (new messages only)<br /> • <strong>None:</strong>
+                                Throw exception if no offset found<br /><br /> • <strong>Session
+                                Timeout:</strong> Max time without heartbeat before rebalance<br />
+                                • <strong>Heartbeat Interval:</strong> How often to send heartbeats
+                                (must be less than session timeout) </div>
+                        </page>
+
+                        <!-- Tab 6: Documentation -->
+                        <page string="Documentation" name="documentation">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="alert alert-success" role="alert">
+                                        <h4>Quick Start Guides</h4>
+                                        <ol>
+                                            <li><strong>Basic Setup:</strong> Configure Bootstrap
+                                                Servers and Security Protocol</li>
+                                            <li><strong>Authentication:</strong> Set up SASL
+                                                credentials if using SASL_* protocols</li>
+                                            <li><strong>SSL/TLS:</strong> Provide certificate paths
+                                                if using SSL/SASL_SSL</li>
+                                            <li><strong>Test Connection:</strong> Click "Test
+                                                Connection" to verify settings</li>
+                                            <li><strong>Save Configuration:</strong> Click "Save
+                                                Configuration" to apply settings</li>
+                                        </ol>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="alert alert-warning" role="alert">
+                                        <h4>Security Best Practices</h4>
+                                        <ul>
+                                            <li>Use SSL/TLS encryption in production environments</li>
+                                            <li>Never store passwords in plain text - use
+                                                environment
+                                                variables</li>
+                                            <li>Regularly rotate SASL credentials</li>
+                                            <li>Ensure certificate files have proper permissions</li>
+                                            <li>Use separate consumer groups for different
+                                                applications</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="alert alert-info" role="alert">
+                                        <h4>Troubleshooting</h4>
+                                        <ul>
+                                            <li><strong>Connection Timeout:</strong> Check bootstrap
+                                                servers and network connectivity</li>
+                                            <li><strong>Authentication Failed:</strong> Verify SASL
+                                                credentials and mechanism</li>
+                                            <li><strong>SSL Errors:</strong> Check certificate paths
+                                                and permissions</li>
+                                            <li><strong>Permission Denied:</strong> Verify Kafka
+                                                ACLs and topic permissions</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </page>
+
+                        <!-- 🔮 Future tabs có thể thêm ở đây cho configs khác -->
+                        <!-- Tab 7: Database Configuration -->
+                        <!-- Tab 8: API Configuration -->
+                        <!-- Tab 9: Email Configuration -->
+
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ─────────────────────────────────────────────
+    ▶ Kafka Configuration Action  
+    ─────────────────────────────────────────────-->
+    <record id="action_kafka_config_wizard" model="ir.actions.act_window">
+        <field name="name">Kafka Configuration</field>
+        <field name="res_model">vnfield.kafka.config.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_kafka_config_wizard_form" />
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure Kafka Parameters
+            </p>
+            <p> Set up your Kafka configuration parameters, including: <ul>
+                    <li>Kafka cluster connection settings</li>
+                    <li>SASL authentication credentials</li>
+                    <li>SSL/TLS certificate configurations</li>
+                    <li>Producer and consumer specific settings</li>
+                    <li>Future: Database, API, Email configurations</li>
+                </ul>
+            </p>
+        </field>
+    </record>
+
+    <!-- ─────────────────────────────────────────────
+    ▶ Menu Item cho Kafka Configuration
+    ─────────────────────────────────────────────-->
+    <menuitem id="menu_kafka_configuration"
+        name="Kafka Configuration"
+        action="action_kafka_config_wizard"
+        parent="vnfield_setting_config_menu"
+        sequence="10" />
+
+</odoo>

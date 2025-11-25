@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 
+    =====================================
+    📂 VN FIELD SYNC REQUEST MENUS
+    =====================================
+    
+    Mô tả:
+        Menu structure cho sync request management
+        Đặt trong VN Field main menu với submenu
+        
+    Structure:
+        VN Field (main)
+        ├── Sync Requests (user menu)
+        └── Administration
+            └── All Sync Requests (admin menu)
+            
+    Created: 2025-08-20
+    Author: GitHub Copilot
+    -->
+
+    <!-- =========================================== -->
+    <!-- 📂 MAIN MENU STRUCTURE                     -->
+    <!-- =========================================== -->
+
+    <!-- Check if main Sync menu exists, if not create it -->
+    <menuitem id="menu_sync_root"
+        name="Sync"
+        sequence="100"
+        web_icon="vnfield,static/description/icon.png" />
+
+    <!-- Sync Requests submenu for regular users -->
+    <menuitem id="menu_sync_requests_user"
+        name="🔄 Sync Requests"
+        parent="menu_sync_root"
+        sequence="50"
+        action="action_sync_request"
+        groups="base.group_user" />
+
+    <!-- Administration submenu -->
+    <menuitem id="menu_vnfield_administration"
+        name="⚙️ Administration"
+        parent="menu_sync_root"
+        sequence="90"
+        groups="base.group_system" />
+
+    <!-- All Sync Requests submenu for administrators -->
+    <menuitem id="menu_sync_requests_admin"
+        name="🔧 All Sync Requests"
+        parent="menu_vnfield_administration"
+        sequence="10"
+        action="action_sync_request_admin"
+        groups="base.group_system" />
+
+</odoo>

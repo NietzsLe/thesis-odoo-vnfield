@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_vnfield_team_tree" model="ir.ui.view">
+        <field name="name">vnfield.team.tree</field>
+        <field name="model">vnfield.team</field>
+        <field name="arch" type="xml">
+            <tree string="Teams" decoration-success="state == 'active'"
+                decoration-muted="state == 'inactive'" decoration-warning="state == 'draft'">
+                <field name="name" />
+                <field name="code" />
+                <field name="external_id" />
+                <field name="team_type" />
+                <field name="contractor_name" />
+                <field name="project_name" />
+                <field name="team_leader_id" />
+                <field name="total_members" />
+                <field name="auto_state" />
+                <field name="state" decoration-success="state == 'active'"
+                    decoration-muted="state == 'inactive'" decoration-warning="state == 'draft'" />
+                <field name="start_date" />
+                <field name="end_date" />
+            </tree>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ TEAM FORM VIEW                                                                                        -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_team_form" model="ir.ui.view">
+        <field name="name">vnfield.team.form</field>
+        <field name="model">vnfield.team</field>
+        <field name="arch" type="xml">
+            <form string="Team">
+                <!-- Header with status buttons -->
+                <header>
+                    <!--
+                    ┌────────────────────────────────────────────┐
+                    │   🚀 TEAM ACTIONS WITH COUNTS               │
+                    │   Buttons với emoji, màu sắc và số lượng    │
+                    └────────────────────────────────────────────┘
+                    -->
+                    <button string="👥 View Users"
+                        type="object"
+                        name="action_view_users"
+                        class="btn btn-primary"
+                        help="View all users in this team" />
+
+                    <button name="action_activate_team" type="object" string="🟢 Activate Team"
+                        class="btn btn-success"
+                        invisible="state == 'active'" />
+                    <button name="action_deactivate_team" type="object"
+                        string="⏸️ Deactivate Team"
+                        class="btn btn-warning"
+                        invisible="state != 'active'" />
+                    <button name="action_disband_team" type="object" string="🔚 Disband Team"
+                        class="btn btn-danger"
+                        invisible="state == 'disbanded'" />
+                    <button name="action_sync_with_project" type="object"
+                        string="🔄 Sync with Project"
+                        class="btn btn-info"
+                        help="Synchronize team state with project lifecycle" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,active,inactive,disbanded" />
+                </header>
+
+                <sheet>
+                    <!-- Load computed count field for button -->
+                    <field name="user_count" invisible="1" />
+
+                    <!-- Title and basic info -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" class="o_text_overflow"
+                                placeholder="Team Name..." />
+                        </h1>
+                        <div>
+                            <field name="code" placeholder="Team Code (optional)" />
+                        </div>
+                    </div>
+
+                    <group>
+                        <!-- Main information group -->
+                        <group name="main_info" string="📋 Team Information">
+                            <field name="contractor_id" options="{'no_create': True}" />
+                            <field name="project_id" options="{'no_create': True}" />
+                            <field name="team_type" readonly="1" />
+                            <field name="external_id" invisible="team_type == 'internal'" />
+                            <field name="contractor_type" readonly="1" />
+                            <field name="project_state" readonly="1" />
+                            <field name="auto_state" readonly="1"
+                                help="Auto-computed state based on project lifecycle" />
+                        </group>
+
+                        <!-- Dates group -->
+                        <group name="dates" string="📅 Duration">
+                            <field name="start_date" />
+                            <field name="end_date" />
+                            <separator colspan="2" />
+                            <field name="member_count" readonly="1" />
+                            <field name="total_members" readonly="1" />
+                        </group>
+                    </group>
+
+                    <!-- Team Structure Notebook -->
+                    <notebook>
+                        <!-- Team Members Page -->
+                        <page name="members" string="👥 Team Members">
+                            <group>
+                                <group name="leader_info" string="👑 Team Leader">
+                                    <field name="team_leader_id" options="{'no_create': True}" />
+                                </group>
+                            </group>
+
+                            <separator string="👨‍👩‍👧‍👦 Team Members" />
+                            <field name="team_member_ids" nolabel="1"
+                                options="{'no_create': True}">
+                                <tree editable="bottom">
+                                    <field name="name" />
+                                    <field name="login" />
+                                    <field name="email" />
+                                    <field name="contractor_id" readonly="1" />
+                                </tree>
+                            </field>
+                        </page>
+
+                        <!-- Description Page -->
+                        <page name="description" string="📝 Description">
+                            <field name="description"
+                                placeholder="Describe the team's role and responsibilities in this project..." />
+                        </page>
+
+                        <!-- Related Information Page -->
+                        <page name="related_info" string="🔗 Related Information">
+                            <group>
+                                <group name="contractor_info" string="🏢 Contractor Details">
+                                    <field name="contractor_name" readonly="1" />
+                                    <field name="contractor_type" readonly="1" />
+                                </group>
+
+                                <group name="project_info" string="🚧 Project Details">
+                                    <field name="project_name" readonly="1" />
+                                    <field name="project_state" readonly="1" />
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ TEAM KANBAN VIEW                                                                                      -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_team_kanban" model="ir.ui.view">
+        <field name="name">vnfield.team.kanban</field>
+        <field name="model">vnfield.team</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name" />
+                <field name="code" />
+                <field name="contractor_name" />
+                <field name="project_name" />
+                <field name="team_leader_id" />
+                <field name="total_members" />
+                <field name="state" />
+                <field name="team_type" />
+                <field name="contractor_type" />
+                <field name="external_id" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <!--
+                        ┌────────────────────────────────────────────┐
+                        │   🎯 COMPACT TEAM KANBAN                    │
+                        │   Tiết kiệm dòng, thông tin cô đọng         │
+                        └────────────────────────────────────────────┘
+                        -->
+                        <div class="oe_kanban_card"
+                            style="background: #fff; border: 1px solid #ddd; padding: 10px; cursor: pointer; border-radius: 12px;">
+                            <div class="oe_kanban_global_click"></div>
+                            <!-- Tên nhóm + chip -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                <div
+                                    style="font-weight: bold; font-size: 1em; color: #333; flex: 1; margin-right: 8px;">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">Tên
+                                        nhóm: </span>
+                                    <t t-out="record.name.raw_value" />
+                                    <t t-if="record.code.raw_value">
+                                        <span
+                                            style="color: #666; font-weight: normal; font-size: 0.85em; margin-left: 4px;">
+                                            (<t t-out="record.code.raw_value" />)</span>
+                                    </t>
+                                </div>
+                                <div style="display: flex; gap: 4px;">
+                                    <span
+                                        t-attf-style="padding: 2px 6px; border-radius: 8px; color: #fff; font-size: 0.7em; font-weight: 500; background: {{ record.team_type.raw_value == 'internal' ? '#4caf50' : (record.team_type.raw_value == 'external' ? '#2196f3' : '#ff9800') }};">
+                                        <t t-if="record.team_type.raw_value == 'internal'">Nội bộ</t>
+                                        <t t-elif="record.team_type.raw_value == 'external'">Bên
+                                            ngoài</t>
+                                        <t t-else="">Liên nhà thầu</t>
+                                    </span>
+                                    <span
+                                        t-attf-style="padding: 2px 6px; border-radius: 8px; color: #fff; font-size: 0.7em; font-weight: 500; background: {{ record.state.raw_value == 'active' ? '#43a047' : (record.state.raw_value == 'draft' ? '#ff9800' : (record.state.raw_value == 'inactive' ? '#757575' : '#f44336')) }};">
+                                        <t t-out="record.state.raw_value" />
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- Contractor + Project -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 0.92em;">
+                                <div style="color: #888;">Nhà thầu: <span style="color: #333;">
+                                        <t t-out="record.contractor_name.raw_value" />
+                                    </span></div>
+                                <div style="color: #888;">Dự án: <span style="color: #333;">
+                                        <t t-out="record.project_name.raw_value" />
+                                    </span></div>
+                            </div>
+                            <!-- Trưởng nhóm với avatar -->
+                            <div
+                                style="margin-bottom: 4px; font-size: 0.92em; color: #888; display: flex; align-items: center;">
+                                <span>Trưởng nhóm:</span>
+                                <t t-set="leader_name"
+                                    t-value="record.team_leader_id and record.team_leader_id.value or ''" />
+                                <t t-set="leader_img"
+                                    t-value="record.team_leader_id and record.team_leader_id.image_128 or false" />
+                                <t t-if="leader_name">
+                                    <span
+                                        style="display: flex; align-items: center; margin-left: 6px;">
+                                        <t t-if="leader_img">
+                                            <span
+                                                style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; border: 2px solid #e0e0e0; display: inline-block; margin-right: 6px;">
+                                                <img
+                                                    t-att-src="'data:image/png;base64,' + leader_img"
+                                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
+                                                    alt="Avatar" />
+                                            </span>
+                                        </t>
+                                        <span
+                                            style="color: #333; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px;">
+                                            <t t-out="leader_name" />
+                                        </span>
+                                    </span>
+                                </t>
+                            </div>
+                            <!-- Thành viên -->
+                            <div
+                                style="display: flex; align-items: center; font-size: 0.92em; color: #888;">
+                                Thành viên: <div
+                                    style="display: flex; align-items: center; margin-left: 6px;">
+                                    <t t-if="record.total_members.raw_value > 0">
+                                        <field name="team_member_ids" widget="many2many_avatar_user"
+                                            options="{'size': 'small', 'display_name': false, 'limit': 2}"
+                                            style="margin-right: 8px;" />
+                                        <t t-if="record.total_members.raw_value > 2">
+                                            <span class="badge bg-secondary"
+                                                style="font-size: 0.8em; padding: 2px 8px; border-radius: 10px; background: #bbb; color: #fff; margin-left: 2px;">
+                                +<t t-out="record.total_members.raw_value - 2" />
+                                            </span>
+                                        </t>
+                                    </t>
+                                </div>
+                            </div>
+                            <!-- External ID (nếu có) -->
+                            <div t-if="record.external_id.raw_value"
+                                style="margin-top: 6px; font-size: 0.8em; color: #666; border-top: 1px solid #f0f0f0; padding-top: 4px;">
+                                External: <span style="color: #333; font-weight: 500;">
+                                    <t t-out="record.external_id.raw_value" />
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ TEAM SEARCH VIEW                                                                                      -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <record id="view_vnfield_team_search" model="ir.ui.view">
+        <field name="name">vnfield.team.search</field>
+        <field name="model">vnfield.team</field>
+        <field name="arch" type="xml">
+            <search string="Search Teams">
+                <field name="name" />
+                <field name="code" />
+                <field name="external_id" />
+                <field name="contractor_name" />
+                <field name="project_name" />
+                <field name="team_leader_id" />
+
+                <!-- Filters -->
+                <separator />
+                <filter string="Active Teams" name="active" domain="[('state', '=', 'active')]" />
+                <filter string="Draft Teams" name="draft" domain="[('state', '=', 'draft')]" />
+                <filter string="Inactive Teams" name="inactive"
+                    domain="[('state', '=', 'inactive')]" />
+                <filter string="Disbanded Teams" name="disbanded"
+                    domain="[('state', '=', 'disbanded')]" />
+
+                <separator />
+                <filter string="External Teams" name="external_teams"
+                    domain="[('team_type', '=', 'external')]" />
+                <filter string="Internal Teams" name="internal_teams"
+                    domain="[('team_type', '=', 'internal')]" />
+
+                <separator />
+                <filter string="External Contractors" name="external"
+                    domain="[('contractor_type', '=', 'external')]" />
+                <filter string="Internal Contractors" name="internal"
+                    domain="[('contractor_type', '=', 'internal')]" />
+
+                <separator />
+                <filter string="My Teams" name="my_teams"
+                    domain="['|', ('team_leader_id', '=', uid), ('team_member_ids', 'in', [uid])]" />
+
+                <separator />
+                <filter string="Teams Need Sync" name="need_sync"
+                    domain="[('auto_state', '!=', 'state')]"
+                    help="Teams with state different from project lifecycle" />
+
+                <!-- Group By -->
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_state" domain="[]"
+                        context="{'group_by': 'state'}" />
+                    <filter string="Team Type" name="group_team_type" domain="[]"
+                        context="{'group_by': 'team_type'}" />
+                    <filter string="Auto State" name="group_auto_state" domain="[]"
+                        context="{'group_by': 'auto_state'}" />
+                    <filter string="Contractor" name="group_contractor" domain="[]"
+                        context="{'group_by': 'contractor_id'}" />
+                    <filter string="Project" name="group_project" domain="[]"
+                        context="{'group_by': 'project_id'}" />
+                    <filter string="Contractor Type" name="group_contractor_type" domain="[]"
+                        context="{'group_by': 'contractor_type'}" />
+                    <filter string="Team Leader" name="group_leader" domain="[]"
+                        context="{'group_by': 'team_leader_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ TEAM ACTION                                                                                           -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="action_team" model="ir.actions.act_window">
+        <field name="name">Teams</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vnfield.team</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first team!
+            </p>
+            <p>
+                Teams represent contractors participating in projects with organized structure
+                including team leaders and members.
+            </p>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ MENU ITEMS                                                                                            -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+</odoo>
+
+<!--═════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+═                                      🔗 VIEW DEPENDENCIES DESCRIPTION                                              ═
+═════════════════════════════════════════════════════════════════════════════════════════════════════════════════-->
+
+<!--
+📋 VIEW COMPONENTS MAPPING:
+
+Tree View Features:
+- Decorator coloring: active=success, inactive=muted, draft=warning
+- Essential columns: name, code, contractor_name, project_name, team_leader_id, total_members
+- Status and date tracking for team lifecycle management
+
+Form View Structure:
+- Header buttons: action_activate_team, action_deactivate_team, action_disband_team
+- Statusbar widget: draft → active → inactive → disbanded workflow
+- Title section: name field với class o_text_overflow
+- Main info group: contractor_id, project_id với no_create options
+- Dates group: start_date, end_date, readonly computed fields
+- Notebook tabs: Team Members, Description, Related Information
+
+Team Members Page:
+- Team leader section với no_create option
+- Team member_ids với tree editable bottom
+- Related contractor info display readonly
+
+Kanban View Features:
+- Group by state with o_kanban_small_column class
+- Card header: team name, code với status badges
+- Card content: contractor info với type badge, project, leader, total members
+- Card management: activate/deactivate actions, view project link
+- Status badges: active=success, inactive=secondary, draft=warning, disbanded=danger
+
+Search View Filters:
+- Basic filters: active, draft, inactive, disbanded teams
+- Contractor type filters: external, internal
+- My teams filter: team_leader_id = uid OR team_member_ids in uid
+- Group by options: state, contractor, project, contractor_type, team_leader
+
+Action Configuration:
+- Default view mode: kanban,tree,form
+- Default filter: search_default_active = 1
+- Help content cho empty state với team creation guidance
+
+Menu Integration:
+- Parent: menu_organization_root  
+- Sequence: 30 (after contractors and users)
+- Action: action_vnfield_team
+
+Domain và Context Patterns:
+- Smart filtering với contractor type badges
+- User context filtering cho "my teams"
+- Default active teams display
+- Status-based decorations và conditional visibility
+
+Field Integration Dependencies:
+- vnfield.team model với tất cả computed và related fields
+- res.users integration cho team_leader_id và team_member_ids
+- vnfield.contractor và vnfield.project foreign keys
+- State workflow với proper statusbar visibility
+-->

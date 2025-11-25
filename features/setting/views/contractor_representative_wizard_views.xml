@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- 🏢 CONTRACTOR REPRESENTATIVE WIZARD FORM -->
+        <record id="view_contractor_representative_wizard_form" model="ir.ui.view">
+            <field name="name">Contractor Representative Configuration Form</field>
+            <field name="model">vnfield.contractor.representative.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Contractor Representative Configuration">
+
+                    <!-- Status Banner -->
+                    <div class="alert alert-info o_form_header" role="alert"
+                        invisible="status == 'not_configured'">
+                        <div class="oe_title">
+                            <label for="status" class="oe_edit_only" />
+                            <h2>
+                                <field name="status" widget="badge"
+                                    decoration-info="status == 'configured'"
+                                    decoration-success="status == 'registered'"
+                                    decoration-muted="status == 'not_configured'" />
+                            </h2>
+                            <div invisible="status != 'registered'">
+                                <strong>External ID:</strong>
+                                <field name="external_id" readonly="1" />
+                                <br />
+                                <strong>Registration Date:</strong>
+                                <field name="registration_date" readonly="1" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <sheet>
+                        <group>
+                            <group string="🏢 Contractor Information">
+                                <field name="name" placeholder="Enter contractor company name..."
+                                    required="1" />
+                                <field name="contractor_type" />
+                                <field name="description"
+                                    placeholder="Company description and capabilities..." />
+                            </group>
+
+                            <group string="📞 Contact Information">
+                                <field name="email" placeholder="company@example.com" required="1" />
+                                <field name="phone" placeholder="+84 xxx xxx xxx" />
+                                <field name="website" placeholder="https://company.com" />
+                                <field name="address" placeholder="Full address..." />
+                            </group>
+                        </group>
+
+                        <group string="🔧 Integration Configuration">
+                            <field name="integration_server_url"
+                                placeholder="https://integration-server.com"
+                                help="URL of the integration system for contractor registration" />
+                            <field name="integration_database"
+                                placeholder="integration_db"
+                                help="Database name on the integration server" />
+                            <field name="integration_username"
+                                placeholder="api_user"
+                                help="Username for authentication on integration server" />
+                            <field name="integration_api_key"
+                                password="True"
+                                placeholder="Your API Key from User Preferences"
+                                help="API Key for secure authentication (generated from User Preferences > Account Security)" />
+                        </group>
+
+                        <!-- Registration Information (Visible when registered) -->
+                        <group string="📊 Registration Information"
+                            invisible="status != 'registered'">
+                            <field name="external_id" readonly="1" />
+                            <field name="registration_date" readonly="1" />
+                        </group>
+                    </sheet>
+
+                    <!-- Footer Buttons -->
+                    <footer>
+                        <div class="oe_button_box">
+
+                            <!-- Save Configuration -->
+                            <button name="action_save_configuration"
+                                type="object"
+                                string="💾 Save Configuration"
+                                class="btn-primary"
+                                help="Save contractor representative configuration" />
+
+                            <!-- Register Contractor -->
+                            <button name="action_register_contractor"
+                                type="object"
+                                string="📝 Register Contractor"
+                                class="btn-success"
+                                invisible="status != 'configured'"
+                                help="Register contractor with integration system" />
+
+                            <!-- Test Connection -->
+                            <button name="action_test_connection"
+                                type="object"
+                                string="🔗 Test Connection"
+                                class="btn-secondary"
+                                help="Test connection to integration system" />
+
+                            <!-- Diagnose Connection -->
+                            <button name="action_diagnose_connection"
+                                type="object"
+                                string="🔍 Diagnose"
+                                class="btn-info"
+                                help="Run comprehensive connection diagnostics" />
+
+                            <!-- Reload Configuration -->
+                            <button name="action_reload_configuration"
+                                type="object"
+                                string="🔄 Reload Config"
+                                class="btn-warning"
+                                help="Reload configuration from system parameters" />
+
+                            <!-- Reset Contractor -->
+                            <button name="action_reset_contractor"
+                                type="object"
+                                string="🔄 Reset Contractor"
+                                class="btn-warning"
+                                invisible="status == 'not_configured'"
+                                confirm="Are you sure you want to reset contractor configuration? This will clear all contractor information but keep RPC connection settings."
+                                help="Reset contractor configuration to not configured state (preserves RPC settings)" />
+
+                            <!-- Cancel -->
+                            <button string="Cancel"
+                                class="btn-secondary"
+                                special="cancel" />
+                        </div>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- 🏢 CONTRACTOR REPRESENTATIVE WIZARD ACTION -->
+        <record id="action_contractor_representative_wizard" model="ir.actions.act_window">
+            <field name="name">Contractor Representative Configuration</field>
+            <field name="res_model">vnfield.contractor.representative.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Configure Contractor Representative
+                </p>
+                <p>
+                    Set up your contractor representative information for integration with external
+                    systems.
+                    This configuration enables:
+                </p>
+                <ul>
+                    <li>🏢 Company profile management</li>
+                    <li>📞 Contact information setup</li>
+                    <li>🔧 Integration system registration</li>
+                    <li>📊 Status tracking and monitoring</li>
+                </ul>
+            </field>
+        </record>
+
+        <!-- 📋 MENU ITEM -->
+        <menuitem
+            id="menu_contractor_representative_wizard"
+            name="Contractor Representative"
+            parent="vnfield_setting_config_menu"
+            action="action_contractor_representative_wizard"
+            sequence="40"
+            groups="vnfield.group_vnfield_admin" />
+
+    </data>
+</odoo>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 
+    =====================================
+    🔒 VN FIELD SYNC REQUEST SECURITY
+    =====================================
+    
+    Mô tả:
+        Security rules cho vnfield.sync.request model
+        Bỏ các rule hạn chế - sử dụng ACL từ ir.model.access.csv
+        
+    Created: 2025-08-20
+    Author: GitHub Copilot
+    -->
+
+    <!-- =========================================== -->
+    <!-- 🔐 RECORD RULES - REMOVED (Use ACL instead) -->
+    <!-- =========================================== -->
+
+    <!-- 
+    💡 NOTE(assistant): Đã bỏ các record rules để sử dụng ACL từ ir.model.access.csv
+    Không còn hạn chế user chỉ xem được requests của mình
+    -->
+
+</odoo>

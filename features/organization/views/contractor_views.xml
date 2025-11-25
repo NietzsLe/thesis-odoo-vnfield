@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Contractor Kanban View -->
+    <record id="view_contractor_kanban" model="ir.ui.view">
+        <field name="name">contractor.kanban</field>
+        <field name="model">vnfield.contractor</field>
+        <field name="priority" eval="16" />
+        <field name="arch" type="xml">
+            <kanban create="true" quick_create="true">
+                <field name="name" />
+                <field name="description" />
+                <field name="contractor_type" />
+                <field name="external_id" />
+                <field name="user_ids" />
+                <!-- 📊 Load computed count fields -->
+                <field name="user_count" />
+                <field name="project_count" />
+                <field name="team_count" />
+
+                <templates>
+                    <!-- Create Button Template -->
+                    <t t-name="kanban-menu">
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <a type="object" name="create"
+                                        class="btn btn-primary btn-sm btn-block">
+                                        <i class="fa fa-plus" /> New Contractor </a>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!--
+                    ┌────────────────────────────────────────────┐
+                    │   🔎 TÍCH HỢP OWL COMPONENT: ContractorFilter│
+                    │   Hiển thị filter UI cho contractor         │
+                    └────────────────────────────────────────────┘
+                    -->
+                    <t t-name="kanban-box">
+                        <!--
+                        📝 TODO(assistant): Tất cả giá trị hiển thị phải lấy từ biến t-set, không truy xuất trực tiếp từ
+                        record trong t-out.
+                        -->
+                        <t t-set="name" t-value="record.name.value" />
+                        <t t-set="description" t-value="record.description.value or ''" />
+                        <t t-set="contractor_type" t-value="record.contractor_type.raw_value" />
+                        <t t-set="user_count"
+                            t-value="record.user_ids.raw_value ? record.user_ids.raw_value.length : 0" />
+                        <t t-set="external_id"
+                            t-value="record.external_id and record.external_id.value or '-'" />
+                        <!--
+                        ┌────────────────────────────────────────────┐
+                        │   🟦 VÙNG MÃ: KANBAN CARD CONTRACTOR        │
+                        │   Mục đích: Hiển thị thẻ contractor với:    │
+                        │   - Chip style cho contractor_type          │
+                        │   - Conditional display cho external info   │
+                        │   - Clickable để mở form                    │
+                        │   - Registration status cho external        │
+                        └────────────────────────────────────────────┘
+                        -->
+                        <!--
+                        💡 NOTE(assistant): 
+                        - oe_kanban_global_click class bên trong div làm card clickable để mở form
+                        - Cursor pointer để hiển thị card có thể click
+                        - Registration status chỉ hiển thị cho external contractor
+                        - User count được tính từ user_ids.value.length
+                        -->
+                        <div class="oe_kanban_card"
+                            style="background: #fff; border: 1px solid #ddd; padding: 12px; cursor: pointer; border-radius: 12px;">
+                            <!-- Global click to open record -->
+                            <div class="oe_kanban_global_click"></div>
+                            <!-- Header với tên và chip type -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-weight: bold; font-size: 1.1em; color: #333;">
+                                    <t t-out="name" />
+                                </span>
+                                <!-- 🎯 CHIP STYLE cho contractor_type - chỉ hiển thị tiếng Việt -->
+                                <t t-if="contractor_type == 'internal'">
+                                    <span class="badge"
+                                        style="padding: 4px 12px; border-radius: 12px; color: #fff; font-size: 0.85em; font-weight: 500; background: #4caf50;">Nội
+                                        bộ</span>
+                                </t>
+                                <t t-elif="contractor_type == 'external'">
+                                    <span class="badge"
+                                        style="padding: 4px 12px; border-radius: 12px; color: #fff; font-size: 0.85em; font-weight: 500; background: #2196f3;">Bên
+                                        ngoài</span>
+                                </t>
+                                <t t-elif="contractor_type == 'shared'">
+                                    <span class="badge"
+                                        style="padding: 4px 12px; border-radius: 12px; color: #fff; font-size: 0.85em; font-weight: 500; background: #ff9800;">Liên
+                                        nhà thầu</span>
+                                </t>
+                                <t t-else="">
+                                    <span class="badge"
+                                        style="padding: 4px 12px; border-radius: 12px; color: #fff; font-size: 0.85em; font-weight: 500; background: #999;">
+                                        Debug: <t t-out="contractor_type" />
+                                    </span>
+                                </t>
+                            </div>
+
+                            <!-- Mô tả với giới hạn 2 dòng và dấu ... -->
+                            <div t-if="description" style="margin-bottom: 8px;">
+                                <div
+                                    style="color: #555; font-size: 0.85em; line-height: 1.3; 
+                                    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; 
+                                    -webkit-box-orient: vertical; word-wrap: break-word;">
+                                    <t t-out="description" />
+                                </div>
+                            </div>
+
+                            <!-- 👥 Danh sách nhân viên với avatar -->
+                            <div style="margin: 8px 0;">
+                                <div style="display: flex; align-items: center;">
+                                    <span style="color: #888; font-size: 0.95em; margin-right: 8px;">Nhân
+                                        sự:</span>
+                                    <div style="display: flex; align-items: center;">
+                                        <t t-if="user_count > 0">
+                                            <field name="user_ids" widget="many2many_avatar_user"
+                                                options="{'size': 'small', 'display_name': false, 'limit': 2}"
+                                                style="margin-right: 8px;" />
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- 📊 Tổng số dự án và teams -->
+                            <div style="display: flex; gap: 16px; margin-bottom: 8px;">
+                                <div>
+                                    <span style="color: #888; font-size: 0.95em;">Dự án:</span>
+                                    <span
+                                        style="color: #1976d2; font-weight: bold; margin-left: 4px;">
+                                        <t t-out="record.project_count.value || 0" />
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="color: #888; font-size: 0.95em;">Teams:</span>
+                                    <span
+                                        style="color: #43a047; font-weight: bold; margin-left: 4px;">
+                                        <t t-out="record.team_count.value || 0" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- 🎯 CONDITIONAL DISPLAY: External ID hiển thị cho external và shared -->
+                            <div t-if="contractor_type in ['external', 'shared'] and external_id"
+                                style="margin-bottom: 6px;">
+                                <span style="color: #666; font-size: 0.95em;">External ID: </span>
+                                <span style="font-weight: bold; color: #333;">
+                                    <t t-out="external_id" />
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Contractor Form View -->
+    <record id="view_contractor_form" model="ir.ui.view">
+        <field name="name">contractor.form</field>
+        <field name="model">vnfield.contractor</field>
+        <field name="priority" eval="16" />
+        <field name="arch" type="xml">
+            <form string="Contractor" create="true" edit="true">
+                <header>
+                    <!--
+                    ┌────────────────────────────────────────────┐
+                    │   🚀 CONTRACTOR ACTIONS WITH COUNTS         │
+                    │   Buttons với emoji, màu sắc và số lượng    │
+                    └────────────────────────────────────────────┘
+                    -->
+                    <div style="display: flex; gap: 8px;">
+                        <button type="object"
+                            name="action_view_projects"
+                            class="btn btn-primary"
+                            help="View all projects this contractor participates in">
+                            🏗️ Projects
+                        </button>
+
+                        <button type="object"
+                            name="action_view_teams"
+                            class="btn btn-info"
+                            help="View all teams of this contractor">
+                            👥 Teams
+                        </button>
+
+                        <button type="object"
+                            name="action_view_users"
+                            class="btn btn-success"
+                            help="View all members of this contractor">
+                            👤 Members
+                        </button>
+
+                        <button type="object"
+                            name="action_register_external"
+                            class="btn btn-secondary"
+                            invisible="contractor_type == 'internal'"
+                            help="Register this contractor in external system">
+                            Register External
+                        </button>
+
+                        <button type="object"
+                            name="action_check_server_status"
+                            class="btn btn-warning"
+                            help="Check server status">
+                            🔗 Check Server Status
+                        </button>
+                    </div>
+
+                    <!-- Load computed count fields for button displays -->
+                    <field name="project_count" invisible="1" />
+                    <field name="team_count" invisible="1" />
+                    <field name="user_count" invisible="1" />
+                </header>
+
+                <sheet>
+
+                    <!-- Title Section -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Contractor Name..." />
+                        </h1>
+                        <h3>
+                            <field name="contractor_type" widget="badge" />
+                        </h3>
+                    </div>
+
+                    <!-- Main Information Groups -->
+                    <group>
+                        <group string="📋 Basic Information" name="basic_info">
+                            <field name="director_id_readonly" invisible="1" />
+                            <field name="director_id" options="{'no_create': True}"
+                                readonly="director_id_readonly" />
+                            <field name="project_director_ids_readonly" invisible="1" />
+                            <field name="bidding_manager_ids_readonly" invisible="1" />
+                            <field name="project_director_ids" widget="many2many_tags"
+                                options="{'no_create': True}"
+                                readonly="project_director_ids_readonly" />
+                            <field name="bidding_manager_ids" widget="many2many_tags"
+                                options="{'no_create': True}"
+                                readonly="bidding_manager_ids_readonly" />
+                            <field name="description" />
+                            <field name="representative_url"
+                                placeholder="https://contractor-server.com"
+                                help="HTTP URL để kiểm tra trạng thái server của contractor" />
+                            <field name="external_id"
+                                invisible="contractor_type == 'internal'" />
+                        </group>
+
+                        <group string="📊 Statistics" name="stats_info">
+                            <field name="user_count" readonly="1" />
+                            <field name="team_count" readonly="1" />
+                            <field name="project_count" readonly="1" />
+                        </group>
+                    </group>
+
+                    <!-- Detailed Information in Notebook -->
+                    <notebook>
+                        <page string="👥 Members" name="users_page">
+                            <!--
+                            ┌────────────────────────────────────────────┐
+                            │   👥 MEMBERS MANAGEMENT                     │
+                            │   One2many field với custom views           │
+                            │   Hiển thị danh sách members của contractor │
+                            └────────────────────────────────────────────┘
+                            -->
+                            <field name="user_ids"
+                                context="{'default_contractor_id': active_id, 'tree_view_ref': 'vnfield.view_user_tree_inherit', 'form_view_ref': 'vnfield.view_user_form_custom'}"
+                            >
+                                <!-- 
+                                💡 NOTE(assistant): 
+                                - context: Sử dụng context thay vì attributes để chỉ định views
+                                - tree_view_ref: Custom tree view (inherit từ base)  
+                                - form_view_ref: Standalone form view (không inherit)
+                                - Standalone form tránh được conflict với user wizard
+                                -->
+                            </field>
+                        </page>
+
+                        <page string="🏗️ Projects" name="projects_page">
+                            <!--
+                            ┌────────────────────────────────────────────┐
+                            │   🏗️ PROJECTS OVERVIEW                      │
+                            │   Hiển thị projects mà contractor tham gia  │
+                            │   Many2many relationship                    │
+                            └────────────────────────────────────────────┘
+                            -->
+                            <field name="project_ids" nolabel="1">
+                                <tree string="Participating Projects">
+                                    <field name="name" />
+                                    <field name="state" widget="badge" />
+                                    <field name="start_date" />
+                                    <field name="end_date" />
+                                    <field name="project_manager_id" />
+                                    <field name="task_count" />
+                                    <field name="progress" widget="progressbar" />
+                                </tree>
+                            </field>
+                        </page>
+
+                        <page string="🎯 Teams" name="teams_page">
+                            <!--
+                            ┌────────────────────────────────────────────┐
+                            │   🎯 TEAMS OVERVIEW                         │
+                            │   Hiển thị teams thuộc contractor           │
+                            │   One2many relationship                     │
+                            └────────────────────────────────────────────┘
+                            -->
+                            <field name="team_ids" nolabel="1">
+                                <tree string="Teams">
+                                    <field name="name" />
+                                    <field name="code" />
+                                    <field name="project_id" />
+                                    <field name="state" widget="badge" />
+                                    <field name="team_leader_id" />
+                                    <field name="total_members" />
+                                    <field name="team_type" widget="badge" />
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Contractor Tree View -->
+    <record id="view_contractor_tree" model="ir.ui.view">
+        <field name="name">contractor.tree</field>
+        <field name="model">vnfield.contractor</field>
+        <field name="priority" eval="16" />
+        <field name="arch" type="xml">
+            <tree string="Contractors">
+                <field name="name" />
+                <field name="contractor_type" />
+                <field name="representative_url" optional="show" />
+                <field name="description" />
+                <field name="external_id" optional="hide" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Contractor Search View (bộ lọc bên trái) -->
+    <record id="view_contractor_search" model="ir.ui.view">
+        <field name="name">contractor.search</field>
+        <field name="model">vnfield.contractor</field>
+        <field name="priority" eval="16" />
+        <field name="arch" type="xml">
+            <!--
+            ┌────────────────────────────────────────────┐
+            │   🔎 SEARCH VIEW: CONTRACTOR                │
+            │   Mục đích: Tìm kiếm và lọc contractor      │
+            │   Chỉ dùng trường lưu trữ, không dùng computed│
+            └────────────────────────────────────────────┘
+            -->
+            <search>
+                <field name="name" />
+                <field name="external_id" />
+                <filter string="Internal" name="internal"
+                    domain="[('contractor_type','=','internal')]" />
+                <filter string="External" name="external"
+                    domain="[('contractor_type','=','external')]" />
+                <filter string="Registered" name="registered" domain="[('external_id','!=',False)]" />
+                <filter string="Not Registered" name="not_registered"
+                    domain="[('external_id','=',False)]" />
+            </search>
+        </field>
+    </record>
+
+    <!-- Contractor Action & Menu -->
+    <record id="action_contractor" model="ir.actions.act_window">
+        <field name="name">Contractors</field>
+        <field name="res_model">vnfield.contractor</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{}</field>
+        <field name="domain">[]</field>
+        <field name="view_ids"
+            eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_contractor_kanban')}),
+            (0, 0, {'view_mode': 'tree', 'view_id': ref('view_contractor_tree')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_contractor_form')})
+        ]" />
+        <field name="search_view_id" ref="view_contractor_search" />
+    </record>
+</odoo>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ═══════════════════════════════════════════════════════════════════════════════════════════════ -->
+    <!--                                  🏗️ PROJECT ACTIONS                                             -->
+    <!--
+        ═══════════════════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- 
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT LIST ACTION                                                                             -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="action_vnfield_project" model="ir.actions.act_window">
+        <field name="name">Projects</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vnfield.project</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                🏗️ Create your first project!
+            </p>
+            <p>
+                Manage your projects with contractors, track progress, and collaborate
+                efficiently.
+            </p>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT INVITATION LIST ACTION                                                                  -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="action_vnfield_project_invitation" model="ir.actions.act_window">
+        <field name="name">Project Invitations</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vnfield.project.invitation</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                🤝 No invitations yet
+            </p>
+            <p>
+                Invitations will appear here when contractors invite each other to collaborate
+                on projects.
+            </p>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ TASK LIST ACTION                                                                                -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="action_vnfield_task" model="ir.actions.act_window">
+        <field name="name">Tasks</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vnfield.task</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                📋 Create your first task!
+            </p>
+            <p>
+                Break down projects into manageable tasks, assign to team members, and track
+                progress.
+            </p>
+        </field>
+    </record>
+
+    <!--
+        ═══════════════════════════════════════════════════════════════════════════════════════════════ -->
+    <!--                                    🎯 MENU ITEMS                                               -->
+    <!--
+        ═══════════════════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- 
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT MANAGEMENT MAIN MENU                                                                    -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <menuitem
+        id="menu_vnfield_project_main"
+        name="Projects"
+        sequence="20"
+        web_icon="vnfield,static/description/icon.png" />
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT SUBMENU ITEMS                                                                           -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <menuitem
+        id="menu_vnfield_project_list"
+        name="All Projects"
+        parent="menu_vnfield_project_main"
+        action="action_vnfield_project"
+        sequence="10" />
+
+    <menuitem
+        id="menu_vnfield_project_invitation_list"
+        name="Invitations"
+        parent="menu_vnfield_project_main"
+        action="action_vnfield_project_invitation"
+        sequence="20" />
+
+    <menuitem
+        id="menu_vnfield_task_list"
+        name="Tasks"
+        parent="menu_vnfield_project_main"
+        action="action_vnfield_task"
+        sequence="30" />
+
+    <!-- Approval Actions -->
+    <record id="action_approval" model="ir.actions.act_window">
+        <field name="name">Approvals</field>
+        <field name="res_model">vnfield.approval</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_ids"
+            eval="[(5,0,0), (0,0,{'view_mode':'kanban','view_id':ref('view_approval_kanban')}), (0,0,{'view_mode':'tree','view_id':ref('view_approval_tree')}), (0,0,{'view_mode':'form','view_id':ref('view_approval_form')})]" />
+    </record>
+
+    <record id="action_approval_step" model="ir.actions.act_window">
+        <field name="name">Approval Steps</field>
+        <field name="res_model">vnfield.approval.step</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_ids"
+            eval="[(5,0,0), (0,0,{'view_mode':'kanban','view_id':ref('view_approval_step_kanban')}), (0,0,{'view_mode':'tree','view_id':ref('view_approval_step_tree')}), (0,0,{'view_mode':'form','view_id':ref('view_approval_step_form')})]" />
+    </record>
+
+    <!-- Approval & Approval Step Menus -->
+    <menuitem
+        id="menu_vnfield_approval_list"
+        name="Approvals"
+        parent="menu_vnfield_project_main"
+        action="action_approval"
+        sequence="40" />
+
+    <menuitem
+        id="menu_vnfield_approval_step_list"
+        name="Approval Steps"
+        parent="menu_vnfield_project_main"
+        action="action_approval_step"
+        sequence="50" />
+
+</odoo>

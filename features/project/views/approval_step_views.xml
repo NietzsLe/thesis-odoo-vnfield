@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Approval Step Tree & Form -->
+    <record id="view_approval_step_tree" model="ir.ui.view">
+        <field name="name">vnfield.approval.step.tree</field>
+        <field name="model">vnfield.approval.step</field>
+        <field name="arch" type="xml">
+            <tree string="Approval Steps" decoration-success="state == 'approved'"
+                decoration-warning="state == 'draft'" decoration-info="state == 'in_progress'"
+                decoration-danger="state == 'rejected'">
+                <field name="name" />
+                <field name="approval_id" />
+                <field name="sequence" />
+                <field name="prev_step_id" string="← Previous Step" />
+                <field name="next_step_id" string="Next Step →" />
+                <field name="state" decoration-success="state == 'approved'"
+                    decoration-warning="state == 'draft'" decoration-info="state == 'in_progress'"
+                    decoration-danger="state == 'rejected'" />
+            </tree>
+        </field>
+    </record>
+    <record id="view_approval_step_form" model="ir.ui.view">
+        <field name="name">vnfield.approval.step.form</field>
+        <field name="model">vnfield.approval.step</field>
+        <field name="arch" type="xml">
+            <form string="Approval Step">
+                <!-- 🔒 UI PROTECTION: Fields readonly when state = 'in_progress' -->
+                <header>
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,in_progress,approved,rejected" />
+                </header>
+                <sheet>
+                    <div
+                        style="background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" class="o_text_overflow"
+                                    placeholder="Step Name..."
+                                    readonly="state == 'in_progress'" />
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group name="basic_info" string="📋 Basic Information">
+                                <field name="approval_id" options="{'no_create': True}"
+                                    readonly="state == 'in_progress'" />
+                                <field name="step_type" widget="radio"
+                                    readonly="state == 'in_progress'" />
+                                <field name="external_id" invisible="step_type != 'shared'"
+                                    readonly="state == 'in_progress'" />
+                                <field name="sequence" readonly="1" />
+                            </group>
+
+                            <group name="chain_info" string="🔗 Chain Summary">
+                                <field name="prev_step_id" readonly="1"
+                                    options="{'no_create': True}"
+                                    help="Previous step (read-only overview)" />
+                                <field name="next_step_id" readonly="1"
+                                    options="{'no_create': True}"
+                                    help="Next step (read-only overview)" />
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="🔗 Chain Relationship">
+                                <group>
+                                    <group name="chain_prev" string="⬅️ Previous Step">
+                                        <field name="prev_step_id"
+                                            domain="[('approval_id', '=', approval_id), ('id', '!=', id)]"
+                                            options="{'no_create': True}"
+                                            help="The previous step in the approval chain (automatically syncs with next step)"
+                                            readonly="state == 'in_progress'" />
+                                    </group>
+                                    <group name="chain_next" string="➡️ Next Step">
+                                        <field name="next_step_id"
+                                            domain="[('approval_id', '=', approval_id), ('id', '!=', id)]"
+                                            options="{'no_create': True}"
+                                            help="The next step in the approval chain (automatically syncs with previous step)"
+                                            readonly="state == 'in_progress'" />
+                                    </group>
+                                </group>
+                                <div class="alert alert-info" style="margin-top: 16px;">
+                                    <strong>🔗 Chain Logic:</strong> When you set a next step, that
+                                    step's previous step is automatically updated. This ensures
+                                    bi-directional consistency in the approval chain. </div>
+                            </page>
+
+                            <page string="👥 Approvers">
+                                <field name="approver_ids" readonly="state == 'in_progress'">
+                                    <tree editable="bottom">
+                                        <field name="user_id" />
+                                        <field name="team_id" />
+                                        <field name="contractor_id" />
+                                        <field name="role" />
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Approval Step Kanban View -->
+    <record id="view_approval_step_kanban" model="ir.ui.view">
+        <field name="name">vnfield.approval.step.kanban</field>
+        <field name="model">vnfield.approval.step</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name" />
+                <field name="approval_id" />
+                <field name="sequence" />
+                <field name="state" />
+                <field name="prev_step_id" />
+                <field name="next_step_id" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <!-- Set variables from record fields -->
+                        <t t-set="name" t-value="record.name.value" />
+                        <t t-set="approval_name" t-value="record.approval_id.value || ''" />
+                        <t t-set="sequence" t-value="record.sequence.value || 0" />
+                        <t t-set="state" t-value="record.state.raw_value" />
+                        <t t-set="prev_step" t-value="record.prev_step_id.value || ''" />
+                        <t t-set="next_step" t-value="record.next_step_id.value || ''" />
+
+                        <div class="oe_kanban_card"
+                            style="background: #fff; border: 1px solid #ddd; padding: 12px; cursor: pointer; border-radius: 12px;">
+                            <div class="oe_kanban_global_click"></div>
+
+                            <!-- Header with Step Name and State Badge -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                <div style="flex: 1; min-width: 0; margin-right: 8px;">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">📋
+                                        Step #<t t-out="sequence" />: </span>
+                                    <span style="font-weight: bold; font-size: 1.05em; color: #333;">
+                                        <t t-out="name" />
+                                    </span>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <!-- State Badge -->
+                                    <span class="badge"
+                                        t-attf-style="padding: 3px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold; background: {{ state == 'approved' ? '#43a047' : (state == 'rejected' ? '#f44336' : (state == 'in_progress' ? '#2196f3' : (state == 'draft' ? '#ff9800' : '#9e9e9e'))) }};">
+                                        <t t-out="record.state.value" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Approval Info -->
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">📑
+                                    Approval: </span>
+                                <span style="font-weight: 500; color: #333;">
+                                    <t t-out="approval_name || 'No Approval'" />
+                                </span>
+                            </div>
+
+                            <!-- Chain Info -->
+                            <div style="margin-bottom: 4px;">
+                                <span style="color: #888; font-size: 0.8em; font-weight: 400;">🔗
+                                    Chain: </span>
+                                <span style="color: #555; font-size: 0.85em;">
+                                    <t t-if="prev_step">← <t t-out="prev_step" /></t>
+                                    <t t-if="!prev_step">🏁 First</t>
+
+                                    <t t-if="next_step"> → <t t-out="next_step" /></t>
+                                    <t t-if="!next_step"> 🏁 Last</t>
+                                </span>
+                            </div>
+
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+</odoo>

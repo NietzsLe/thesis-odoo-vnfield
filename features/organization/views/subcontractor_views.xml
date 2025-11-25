@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 🏗️ REMOTE SUBCONTRACTOR TREE VIEW -->
+    <record id="view_subcontractor_tree" model="ir.ui.view">
+        <field name="name">vnfield.subcontractor.tree</field>
+        <field name="model">vnfield.subcontractor</field>
+        <field name="arch" type="xml">
+            <tree string="Remote Subcontractors" create="false" edit="false">
+                <field name="name" />
+                <field name="subcontractor_type" />
+                <field name="representative_id" />
+                <field name="representative_url" />
+                <field name="user_count" />
+                <field name="team_count" />
+                <field name="project_count" />
+                <field name="external_id" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- 🏗️ REMOTE SUBCONTRACTOR FORM VIEW -->
+    <record id="view_subcontractor_form" model="ir.ui.view">
+        <field name="name">vnfield.subcontractor.form</field>
+        <field name="model">vnfield.subcontractor</field>
+        <field name="arch" type="xml">
+            <form string="Remote Subcontractor">
+                <header>
+                    <!-- Action buttons -->
+                    <button name="action_register_external"
+                        type="object"
+                        string="🔧 Register External"
+                        class="btn-primary"
+                        invisible="subcontractor_type == 'internal'"
+                        help="Register subcontractor with external system" />
+
+                    <button name="action_check_server_status"
+                        type="object"
+                        string="🔗 Check Server Status"
+                        class="btn-info"
+                        help="Check if representative server is online" />
+
+                    <button name="action_open_representative_interface"
+                        type="object"
+                        string="🌐 Open Interface"
+                        class="btn-success"
+                        invisible="not representative_url"
+                        help="Open representative interface in browser" />
+
+                    <button name="test_integration_connection"
+                        type="object"
+                        string="🔧 Test Connection"
+                        class="btn-warning"
+                        help="Test RPC connection to integration server" />
+                </header>
+
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Remote Subcontractor Name..." />
+                        </h1>
+                        <h3>
+                            <span class="badge badge-info">🔗 Remote Data</span>
+                        </h3>
+                    </div>
+
+                    <group>
+                        <group string="🏗️ Basic Information">
+                            <field name="subcontractor_type" />
+                            <field name="representative_id" />
+                            <field name="external_id" readonly="1" />
+                        </group>
+
+                        <group string="🔗 Server Information">
+                            <field name="representative_url"
+                                placeholder="https://subcontractor-server.com"
+                                help="HTTP URL to check subcontractor server status" />
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="description"
+                            placeholder="Remote subcontractor description and capabilities..." />
+                    </group>
+
+                    <!-- Statistics and Quick Actions -->
+                    <div class="oe_clear">
+                        <div class="oe_button_box" name="button_box">
+                            <!-- Users button -->
+                            <button name="action_view_users"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-users">
+                                <field name="user_count" widget="statinfo" string="Users" />
+                            </button>
+
+                            <!-- Teams button -->
+                            <button name="action_view_teams"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-group">
+                                <field name="team_count" widget="statinfo" string="Teams" />
+                            </button>
+
+                            <!-- Projects button -->
+                            <button name="action_view_projects"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-building">
+                                <field name="project_count" widget="statinfo" string="Projects" />
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remote Data Information -->
+                    <group string="Remote Integration Information">
+                        <div class="alert alert-info" role="alert">
+                            <h4>🔗 Remote Data Source</h4>
+                            <p>This subcontractor is loaded from an external integration server via
+                                XML-RPC.</p>
+                            <p>Data is not stored locally but fetched in real-time from the remote
+                                system.</p>
+                            <ul>
+                                <li><strong>Users:</strong> Managed on integration server</li>
+                                <li><strong>Teams:</strong> Managed on integration server</li>
+                                <li><strong>Projects:</strong> Managed on integration server</li>
+                            </ul>
+                        </div>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- 🏗️ REMOTE SUBCONTRACTOR KANBAN VIEW -->
+    <record id="view_subcontractor_kanban" model="ir.ui.view">
+        <field name="name">vnfield.subcontractor.kanban</field>
+        <field name="model">vnfield.subcontractor</field>
+        <field name="arch" type="xml">
+            <kanban create="false" quick_create="false">
+                <field name="name" />
+                <field name="description" />
+                <field name="subcontractor_type" />
+                <field name="representative_id" />
+                <field name="representative_url" />
+                <field name="user_count" />
+                <field name="team_count" />
+                <field name="project_count" />
+                <field name="external_id" />
+
+                <templates>
+                    <!-- Kanban Box Template -->
+                    <t t-name="kanban-box">
+                        <!-- Set variables for cleaner code -->
+                        <t t-set="name" t-value="record.name.value" />
+                        <t t-set="description" t-value="record.description.value or ''" />
+                        <t t-set="subcontractor_type" t-value="record.subcontractor_type.raw_value" />
+                        <t t-set="external_id"
+                            t-value="record.external_id and record.external_id.value or '-'" />
+
+                        <!-- Kanban Card with Custom Styling -->
+                        <div class="oe_kanban_card"
+                            style="background: #fff; border: 1px solid #ddd; padding: 12px; cursor: pointer; border-radius: 12px; border-left: 4px solid #2196f3;">
+                            <!-- Global click to open record -->
+                            <div class="oe_kanban_global_click"></div>
+
+                            <!-- Header với tên và chip type -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-weight: bold; font-size: 1.1em; color: #333;">
+                                    <t t-out="name" />
+                                </span>
+                                <div style="display: flex; gap: 4px;">
+                                    <!-- Remote badge -->
+                                    <span class="badge"
+                                        style="padding: 2px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; background: #2196f3;">
+                                        🔗 Remote
+                                    </span>
+                                    <!-- Type badge -->
+                                    <t t-if="subcontractor_type == 'internal'">
+                                        <span class="badge"
+                                            style="padding: 2px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; background: #4caf50;">
+                                            Nội bộ
+                                        </span>
+                                    </t>
+                                    <t t-elif="subcontractor_type == 'external'">
+                                        <span class="badge"
+                                            style="padding: 2px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; background: #ff9800;">
+                                            Bên ngoài
+                                        </span>
+                                    </t>
+                                    <t t-elif="subcontractor_type == 'shared'">
+                                        <span class="badge"
+                                            style="padding: 2px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; background: #9c27b0;">
+                                            Liên thầu phụ
+                                        </span>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Mô tả với giới hạn 2 dòng -->
+                            <div t-if="description" style="margin-bottom: 8px;">
+                                <div
+                                    style="color: #555; font-size: 0.85em; line-height: 1.3; 
+                                    overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; 
+                                    -webkit-box-orient: vertical; word-wrap: break-word;">
+                                    <t t-out="description" />
+                                </div>
+                            </div>
+
+                            <!-- Representative info -->
+                            <div t-if="record.representative_id.raw_value" style="margin: 8px 0;">
+                                <div style="display: flex; align-items: center;">
+                                    <span style="color: #888; font-size: 0.9em; margin-right: 8px;">Đại
+                                        diện:</span>
+                                    <span style="color: #1976d2; font-weight: 500;">
+                                        <field name="representative_id" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Server URL info -->
+                            <div t-if="record.representative_url.raw_value" style="margin: 8px 0;">
+                                <div style="display: flex; align-items: center;">
+                                    <span style="color: #888; font-size: 0.9em; margin-right: 8px;">
+                                        Server:</span>
+                                    <span
+                                        style="color: #666; font-size: 0.85em; text-decoration: none;">
+                                        🔗 <field name="representative_url" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Tổng số dự án, teams và users -->
+                            <div style="display: flex; gap: 16px; margin-bottom: 8px;">
+                                <div>
+                                    <span style="color: #888; font-size: 0.9em;">Dự án:</span>
+                                    <span
+                                        style="color: #1976d2; font-weight: bold; margin-left: 4px;">
+                                        <t t-out="record.project_count.value || 0" />
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="color: #888; font-size: 0.9em;">Teams:</span>
+                                    <span
+                                        style="color: #43a047; font-weight: bold; margin-left: 4px;">
+                                        <t t-out="record.team_count.value || 0" />
+                                    </span>
+                                </div>
+                                <div>
+                                    <span style="color: #888; font-size: 0.9em;">Users:</span>
+                                    <span
+                                        style="color: #f57c00; font-weight: bold; margin-left: 4px;">
+                                        <t t-out="record.user_count.value || 0" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- External ID hiển thị cho external và shared -->
+                            <div
+                                t-if="subcontractor_type in ['external', 'shared'] and external_id != '-'"
+                                style="margin-bottom: 6px;">
+                                <span style="color: #666; font-size: 0.9em;">External ID: </span>
+                                <span
+                                    style="font-weight: bold; color: #333; font-family: monospace;">
+                                    <t t-out="external_id" />
+                                </span>
+                            </div>
+
+                            <!-- Action buttons -->
+                            <div
+                                style="margin-top: 8px; text-align: right; display: flex; gap: 4px; justify-content: flex-end;">
+                                <button name="action_check_server_status"
+                                    type="object"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    title="Check Server Status"
+                                    style="border-radius: 4px; font-size: 0.85em;">
+                                    🔗
+                                </button>
+                                <button name="test_integration_connection"
+                                    type="object"
+                                    class="btn btn-sm btn-outline-warning"
+                                    title="Test RPC Connection"
+                                    style="border-radius: 4px; font-size: 0.85em;">
+                                    🔧
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- 🏗️ REMOTE SUBCONTRACTOR SEARCH VIEW -->
+    <record id="view_subcontractor_search" model="ir.ui.view">
+        <field name="name">vnfield.subcontractor.search</field>
+        <field name="model">vnfield.subcontractor</field>
+        <field name="arch" type="xml">
+            <search string="Search Remote Subcontractors">
+                <field name="name" string="Name" />
+                <field name="subcontractor_type" string="Type" />
+                <field name="representative_id" string="Representative" />
+                <field name="external_id" string="External ID" />
+
+                <filter string="Internal" name="internal"
+                    domain="[('subcontractor_type', '=', 'internal')]" />
+                <filter string="External" name="external"
+                    domain="[('subcontractor_type', '=', 'external')]" />
+                <filter string="Shared" name="shared"
+                    domain="[('subcontractor_type', '=', 'shared')]" />
+
+                <separator />
+                <filter string="Has External ID" name="has_external_id"
+                    domain="[('external_id', '!=', False)]" />
+
+                <group expand="0" string="Group By">
+                    <filter string="Type" name="group_by_type"
+                        context="{'group_by': 'subcontractor_type'}" />
+                    <filter string="Representative" name="group_by_representative"
+                        context="{'group_by': 'representative_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- 🏗️ REMOTE SUBCONTRACTOR ACTION -->
+    <record id="action_subcontractor" model="ir.actions.act_window">
+        <field name="name">Remote Subcontractors</field>
+        <field name="res_model">vnfield.subcontractor</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_id" ref="view_subcontractor_kanban" />
+        <field name="search_view_id" ref="view_subcontractor_search" />
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                🔗 Remote subcontractors from integration server
+            </p>
+            <p>
+                Subcontractors are loaded from external integration server via XML-RPC.
+                Data is fetched in real-time and not stored locally.
+            </p>
+            <p>
+                Configure integration server settings in system parameters to get started.
+            </p>
+        </field>
+    </record>
+
+</odoo>

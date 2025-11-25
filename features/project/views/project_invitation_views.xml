@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT INVITATION TREE VIEW                                                                          -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_project_invitation_tree" model="ir.ui.view">
+        <field name="name">vnfield.project.invitation.tree</field>
+        <field name="model">vnfield.project.invitation</field>
+        <field name="arch" type="xml">
+            <tree string="Project Invitations"
+                decoration-success="state == 'accepted'"
+                decoration-danger="state == 'rejected'"
+                decoration-warning="state == 'sent'"
+                decoration-muted="state in ['cancelled', 'expired']">
+                <field name="display_name" />
+                <field name="project_name" />
+                <field name="project_owner_name" />
+                <field name="invitee_name" />
+                <field name="state" decoration-success="state == 'accepted'"
+                    decoration-danger="state == 'rejected'" decoration-warning="state == 'sent'" />
+                <field name="priority" />
+                <field name="sent_date" />
+                <field name="response_date" />
+                <field name="expiry_date" />
+                <field name="is_expired" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT INVITATION FORM VIEW                                                                          -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_project_invitation_form" model="ir.ui.view">
+        <field name="name">vnfield.project.invitation.form</field>
+        <field name="model">vnfield.project.invitation</field>
+        <field name="arch" type="xml">
+            <form string="Project Invitation">
+                <header>
+                    <button name="action_send_invitation" type="object"
+                        string="📤 Send Invitation" class="btn-primary"
+                        invisible="state != 'draft'" />
+                    <button name="action_accept_invitation" type="object"
+                        string="✅ Accept" class="btn-success"
+                        invisible="not can_respond or state != 'sent'" />
+                    <button name="action_reject_invitation" type="object"
+                        string="❌ Reject" class="btn-danger"
+                        invisible="not can_respond or state != 'sent'" />
+                    <button name="action_cancel_invitation" type="object"
+                        string="🚫 Cancel" class="btn-secondary"
+                        invisible="state not in ['draft', 'sent']" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,sent,accepted,rejected" />
+                </header>
+
+                <sheet>
+                    <div
+                        style="background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="oe_title">
+                            <h1>
+                                <field name="subject" class="o_text_overflow"
+                                    placeholder="Invitation Subject..." />
+                            </h1>
+                        </div>
+
+                        <!-- Alert for expired invitations -->
+                        <div class="alert alert-warning" role="alert" invisible="not is_expired">
+                            <strong>⚠️ Warning:</strong> This invitation has expired. </div>
+
+                        <!-- Hidden fields for domain filtering -->
+                        <field name="project_id" invisible="1" />
+                        <field name="contractor_domain_types" invisible="1" />
+
+                        <group>
+                            <group name="project_info" string="📋 Project Information">
+                                <field name="project_id" options="{'no_create': True}" />
+                                <field name="inviter_contractor_id" string="Project Owner"
+                                    readonly="1" />
+                                <field name="priority" />
+                            </group>
+
+                            <group name="invitation_info" string="🤝 Invitation Details">
+                                <field name="invitee_contractor_id" options="{'no_create': True}"
+                                    domain="[('contractor_type', 'in', ['internal', 'shared'] if project_id and project_id.project_type == 'internal' else ['internal', 'shared', 'external'])]" />
+                                <field name="inviter_user_id" readonly="1" />
+                                <field name="responder_user_id" readonly="1" />
+                            </group>
+                        </group>
+
+                        <group>
+                            <group name="dates" string="📅 Dates">
+                                <field name="sent_date" readonly="1" />
+                                <field name="response_date" readonly="1" />
+                                <field name="expiry_date" />
+                                <field name="is_expired" readonly="1" />
+                            </group>
+
+                            <group name="response_info" string="📊 Response Info">
+                                <field name="can_respond" readonly="1" />
+                            </group>
+                        </group>
+
+                        <separator string="💬 Invitation Message" />
+                        <field name="message" nolabel="1"
+                            placeholder="Write your invitation message here..." />
+                    </div>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT INVITATION KANBAN VIEW                                                                        -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_project_invitation_kanban" model="ir.ui.view">
+        <field name="name">vnfield.project.invitation.kanban</field>
+        <field name="model">vnfield.project.invitation</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="display_name" />
+                <field name="project_name" />
+                <field name="invitee_name" />
+                <field name="state" />
+                <field name="priority" />
+                <field name="sent_date" />
+                <field name="is_expired" />
+                <field name="can_respond" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <t t-set="display_name" t-value="record.display_name.value" />
+                        <t t-set="project_name" t-value="record.project_name.value or ''" />
+                        <t t-set="invitee_name" t-value="record.invitee_name.value or ''" />
+                        <t t-set="state" t-value="record.state.raw_value" />
+                        <t t-set="priority" t-value="record.priority.value or 'normal'" />
+                        <t t-set="is_expired" t-value="record.is_expired.value" />
+                        <t t-set="can_respond" t-value="record.can_respond.value" />
+
+                        <div class="oe_kanban_card"
+                            style="background: #fff; border: 1px solid #ddd; padding: 12px; cursor: pointer; border-radius: 12px;">
+                            <div class="oe_kanban_global_click"></div>
+
+                            <!-- Header -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="font-weight: bold; font-size: 1em; color: #333;">
+                                    <t t-out="display_name" />
+                                </span>
+                                <!-- State Badge -->
+                                <span class="badge"
+                                    t-attf-style="padding: 4px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; background: {{ state == 'accepted' ? '#43a047' : (state == 'rejected' ? '#f44336' : (state == 'sent' ? '#ff9800' : (state == 'expired' ? '#757575' : '#9e9e9e'))) }};">
+                                    <t t-out="state.charAt(0).toUpperCase() + state.slice(1)" />
+                                </span>
+                            </div>
+
+                            <!-- Project & Invitee Info - Compact Layout -->
+                            <div
+                                style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+                                <div style="flex: 1; min-width: 0; margin-right: 8px;">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">Dự
+                                        án: </span>
+                                    <span style="color: #333; font-weight: 500;">
+                                        <t t-out="project_name" />
+                                    </span>
+                                </div>
+                                <div t-if="priority != 'normal'" style="flex-shrink: 0;">
+                                    <span class="badge"
+                                        t-attf-style="padding: 2px 6px; border-radius: 6px; font-size: 0.7em; background: {{ priority == 'urgent' ? '#f44336' : (priority == 'high' ? '#ff9800' : '#4caf50') }}; color: white;">
+                                        <t
+                                            t-out="priority.charAt(0).toUpperCase() + priority.slice(1)" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">
+                                    Contractor: </span>
+                                <span style="color: #333; font-weight: 500;">
+                                    <t t-out="invitee_name" />
+                                </span>
+                            </div>
+
+                            <!-- Status & Actions -->
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                <div t-if="is_expired"
+                                    style="color: #f44336; font-size: 0.8em; font-weight: 500;">
+                                    ⚠️ Hết hạn
+                                </div>
+                                <div t-if="can_respond and state == 'sent'"
+                                    style="display: flex; gap: 6px;">
+                                    <button class="btn btn-success btn-sm"
+                                        name="action_accept_invitation" type="object"
+                                        style="font-size: 0.8em; padding: 4px 8px;">
+                                        ✅ Chấp nhận
+                                    </button>
+                                    <button class="btn btn-danger btn-sm"
+                                        name="action_reject_invitation" type="object"
+                                        style="font-size: 0.8em; padding: 4px 8px;">
+                                        ❌ Từ chối
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT INVITATION SEARCH VIEW                                                                        -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_project_invitation_search" model="ir.ui.view">
+        <field name="name">vnfield.project.invitation.search</field>
+        <field name="model">vnfield.project.invitation</field>
+        <field name="arch" type="xml">
+            <search string="Search Invitations">
+                <field name="display_name" />
+                <field name="subject" />
+                <field name="project_name" />
+                <field name="invitee_name" />
+                <field name="project_owner_name" />
+
+                <!-- Filters -->
+                <separator />
+                <filter string="Pending" name="pending" domain="[('state', '=', 'sent')]" />
+                <filter string="Accepted" name="accepted" domain="[('state', '=', 'accepted')]" />
+                <filter string="Rejected" name="rejected" domain="[('state', '=', 'rejected')]" />
+                <filter string="Expired" name="expired" domain="[('state', '=', 'expired')]" />
+
+                <separator />
+                <filter string="My Invitations" name="my_invitations"
+                    domain="[('inviter_user_id', '=', uid)]" />
+                <filter string="Invitations for Me" name="for_me"
+                    domain="[('invitee_contractor_id.user_ids', 'in', [uid])]" />
+
+                <separator />
+                <filter string="High Priority" name="high_priority"
+                    domain="[('priority', 'in', ['high', 'urgent'])]" />
+
+                <!-- Group By -->
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_state" domain="[]"
+                        context="{'group_by': 'state'}" />
+                    <filter string="Project" name="group_project" domain="[]"
+                        context="{'group_by': 'project_id'}" />
+                    <filter string="Priority" name="group_priority" domain="[]"
+                        context="{'group_by': 'priority'}" />
+                    <filter string="Inviter" name="group_inviter" domain="[]"
+                        context="{'group_by': 'inviter_contractor_id'}" />
+                    <filter string="Invitee" name="group_invitee" domain="[]"
+                        context="{'group_by': 'invitee_contractor_id'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT INVITATION ACTION                                                                             -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="action_project_invitation" model="ir.actions.act_window">
+        <field name="name">Project Invitations</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vnfield.project.invitation</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No project invitations yet!
+            </p>
+            <p>
+                Project invitations allow contractors to invite other contractors to collaborate
+                on projects.
+                Create invitations from the project form or directly here.
+            </p>
+        </field>
+    </record>
+
+</odoo>

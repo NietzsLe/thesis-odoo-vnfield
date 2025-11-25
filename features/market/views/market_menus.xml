@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- 🏗️ MARKET MAIN MENUS -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Main Market Menu -->
+    <menuitem id="menu_market_root"
+        name="Market"
+        sequence="30"
+        groups="base.group_user" />
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- 📋 MARKET OPERATION MENUS -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Requirements Menu -->
+    <menuitem id="menu_market_requirements"
+        name="Requirements"
+        parent="menu_market_root"
+        sequence="10"
+        action="action_market_requirement"
+        groups="base.group_user" />
+
+    <!-- Capacity Profiles Menu -->
+    <menuitem id="menu_market_capacity_profiles"
+        name="Capacity Profiles"
+        parent="menu_market_root"
+        sequence="20"
+        action="action_capacity_profile"
+        groups="base.group_user" />
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- 🌐 REMOTE DATA MENUS -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Remote Data Submenu -->
+    <menuitem id="menu_market_remote"
+        name="Remote Data"
+        parent="menu_market_root"
+        sequence="50"
+        groups="base.group_user" />
+
+    <!-- Remote Capacity Profiles Menu -->
+    <menuitem id="menu_market_remote_capacity_profiles"
+        name="Remote Capacity Profiles"
+        parent="menu_market_remote"
+        sequence="10"
+        action="action_remote_capacity_profile"
+        groups="base.group_user" />
+
+    <!-- Remote Requirements Menu -->
+    <menuitem id="menu_market_remote_requirements"
+        name="Remote Requirements"
+        parent="menu_market_remote"
+        sequence="20"
+        action="action_remote_requirement"
+        groups="base.group_user" />
+
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- ⚙️ MARKET CONFIGURATION MENUS -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Market Configuration Menu -->
+    <menuitem id="menu_market_config"
+        name="Configuration"
+        parent="menu_market_root"
+        sequence="90"
+        groups="base.group_system" />
+
+</odoo>

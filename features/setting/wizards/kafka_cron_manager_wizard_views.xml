@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Kafka Universal Consumer Manager Form View -->
+    <record id="view_kafka_cron_manager_form" model="ir.ui.view">
+        <field name="name">vnfield.kafka.cron.manager.form</field>
+        <field name="model">vnfield.kafka.cron.manager</field>
+        <field name="arch" type="xml">
+            <form string="Kafka Universal Consumer Management">
+                <header>
+                    <!-- Universal Consumer Actions -->
+                    <button name="action_start_universal_consumer" type="object"
+                        string="Start Consumer" class="btn-success"
+                        help="Start VNField universal consumer" />
+
+                    <button name="action_stop_universal_consumer" type="object"
+                        string="Stop Consumer" class="btn-warning"
+                        help="Stop VNField universal consumer" />
+
+                    <button name="action_restart_all_consumers" type="object"
+                        string="Restart Consumer" class="btn-primary"
+                        help="Restart VNField universal consumer" />
+
+                    <button name="action_refresh_status" type="object"
+                        string="Refresh" class="btn-secondary"
+                        help="Refresh consumer status" />
+
+                    <button name="action_view_cron_jobs" type="object"
+                        string="View Cron Job" class="btn-info"
+                        help="View universal consumer cron job" />
+                </header>
+
+                <sheet>
+                    <!-- Title Section -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" />
+                        </h1>
+                    </div>
+
+                    <notebook>
+                        <!-- Universal Consumer Status -->
+                        <page string="Universal Consumer" name="universal_consumer">
+                            <group>
+                                <group name="consumer_status" string="Consumer Status">
+                                    <field name="consumer_active" widget="boolean_toggle" />
+                                    <field name="consumer_id" readonly="1" />
+                                    <field name="last_run" readonly="1" />
+                                    <field name="next_run" readonly="1" />
+                                </group>
+
+                                <group name="consumer_stats" string="Statistics">
+                                    <field name="total_consumers" readonly="1" />
+                                    <field name="active_consumers" readonly="1" />
+                                    <field name="inactive_consumers" readonly="1" />
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Topic Configuration -->
+                        <page string="Topic Configuration" name="topic_config">
+                            <group>
+                                <group name="topic_settings" string="Topic Settings">
+                                    <field name="topic_name"
+                                        help="VNField universal topic name" />
+                                    <button name="action_apply_topic_config" type="object"
+                                        string="Apply Topic Config" class="btn-primary btn-sm"
+                                        help="Apply topic configuration to system parameters" />
+                                </group>
+
+                                <group name="kafka_settings" string="Kafka Settings">
+                                    <field name="kafka_enabled" readonly="1" widget="boolean_toggle" />
+                                    <field name="bootstrap_servers" readonly="1" />
+                                    <field name="default_group_id" readonly="1" />
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Consumer Configuration -->
+                        <page string="Consumer Configuration" name="consumer_config">
+                            <group>
+                                <group name="cron_config" string="Cron Configuration">
+                                    <field name="interval_number" />
+                                    <field name="interval_type" />
+                                    <field name="priority" />
+                                    <field name="numbercall" />
+                                </group>
+
+                                <group name="consumer_code" string="Consumer Code">
+                                    <field name="code" widget="text" />
+                                </group>
+                            </group>
+
+                            <group>
+                                <div class="mt16">
+                                    <button name="action_apply_global_config" type="object"
+                                        string="Apply Configuration" class="btn-primary"
+                                        help="Apply configuration to consumer cron job" />
+                                    <button name="action_load_current_config" type="object"
+                                        string="Load Current Config" class="btn-secondary"
+                                        help="Load configuration from active consumer" />
+                                </div>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action Window -->
+    <record id="action_kafka_cron_manager" model="ir.actions.act_window">
+        <field name="name">Kafka Universal Consumer Manager</field>
+        <field name="res_model">vnfield.kafka.cron.manager</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                ⚙️ Kafka Universal Consumer Management
+            </p>
+            <p> Quản lý universal consumer cho tất cả VNField Kafka messages.<br /> - Start/Stop
+                universal consumer<br /> - Cấu hình topic và cron parameters<br /> - Monitor
+                consumer status </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_kafka_cron_manager"
+        name="Kafka Consumer Manager"
+        parent="vnfield_setting_config_menu"
+        action="action_kafka_cron_manager"
+        sequence="30" />
+
+</odoo>

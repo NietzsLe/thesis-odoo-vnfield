@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- 🏗️ MARKET REQUIREMENT VIEWS -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Kanban View -->
+    <record id="view_market_requirement_kanban" model="ir.ui.view">
+        <field name="name">vnfield.market.requirement.kanban</field>
+        <field name="model">vnfield.market.requirement</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="id" />
+                <field name="title" />
+                <field name="contractor_id" />
+                <field name="work_category" />
+                <field name="budget_min" />
+                <field name="budget_max" />
+                <field name="currency_id" />
+                <field name="state" />
+                <field name="match_count" />
+                <field name="start_date" />
+                <field name="end_date" />
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_content">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong>
+                                            <field name="title" />
+                                        </strong>
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        <span class="badge badge-pill"
+                                            t-attf-class="badge-#{record.state.raw_value == 'waiting_match' ? 'success' : (record.state.raw_value == 'matched' ? 'primary' : 'secondary')}">
+                                            <field name="state" />
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-1">
+                                    <div class="col-12">
+                                        <i class="fa fa-building-o" />
+                                        <field name="contractor_id" />
+                                    </div>
+                                </div>
+
+                                <div class="row mt-1">
+                                    <div class="col-12">
+                                        <i class="fa fa-wrench" />
+                                        <field name="work_category" />
+                                    </div>
+                                </div>
+
+                                <div class="row mt-1"
+                                    t-if="record.budget_min.raw_value or record.budget_max.raw_value">
+                                    <div class="col-12">
+                                        <i class="fa fa-money" />
+                                        <t
+                                            t-if="record.budget_min.raw_value and record.budget_max.raw_value">
+                                            <field name="budget_min" /> - <field name="budget_max" /> <field
+                                                name="currency_id" />
+                                        </t>
+                                        <t t-elif="record.budget_min.raw_value"> From <field
+                                                name="budget_min" /> <field name="currency_id" />
+                                        </t>
+                                        <t t-elif="record.budget_max.raw_value"> Up to <field
+                                                name="budget_max" /> <field name="currency_id" />
+                                        </t>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-1" t-if="record.start_date.raw_value">
+                                    <div class="col-12">
+                                        <i class="fa fa-calendar" /> <field name="start_date" /> - <field
+                                            name="end_date" />
+                                    </div>
+                                </div>
+
+                                <div class="row mt-2">
+                                    <div class="col-6">
+                                        <span class="badge badge-info">
+                                            <i class="fa fa-handshake-o" /> <field name="match_count" />
+                                            match </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_market_requirement_tree" model="ir.ui.view">
+        <field name="name">vnfield.market.requirement.tree</field>
+        <field name="model">vnfield.market.requirement</field>
+        <field name="arch" type="xml">
+            <tree decoration-success="state == 'waiting_match'"
+                decoration-primary="state == 'matched'"
+                decoration-muted="state == 'inactive'">
+                <field name="title" />
+                <field name="task_id" />
+                <field name="contractor_id" />
+                <field name="work_category" />
+                <field name="location" />
+                <field name="budget_min" />
+                <field name="budget_max" />
+                <field name="currency_id" />
+                <field name="start_date" />
+                <field name="end_date" />
+                <field name="match_count" />
+                <field name="state" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_market_requirement_form" model="ir.ui.view">
+        <field name="name">vnfield.market.requirement.form</field>
+        <field name="model">vnfield.market.requirement</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_find_matches" type="object" string="Find Partners"
+                        invisible="state not in ('waiting_match', 'matched')"
+                        class="btn-secondary" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="waiting_match,matched,inactive" />
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_matches"
+                            icon="fa-handshake-o">
+                            <field string="Matches" name="match_count" widget="statinfo" />
+                        </button>
+
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="title" />
+                            <field name="task_id" />
+                            <field name="contractor_id" />
+                            <field name="work_category" />
+                            <field name="location" />
+                        </group>
+                        <group>
+                            <field name="start_date" />
+                            <field name="end_date" />
+                            <field name="duration_months" />
+                            <field name="required_experience_years" />
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Description &amp; Requirements">
+                            <group>
+                                <field name="description" widget="html" />
+                                <field name="required_certifications" />
+                            </group>
+                        </page>
+
+                        <page string="Budget &amp; Resources">
+                            <group>
+                                <group>
+                                    <field name="budget_min" />
+                                    <field name="budget_max" />
+                                    <field name="currency_id" />
+                                </group>
+                                <group>
+                                    <field name="team_size_min" />
+                                    <field name="team_size_max" />
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Matching Capacity Profiles" invisible="state == 'draft'">
+                            <field name="capacity_profile_ids" widget="many2many_list"
+                                mode="tree,form" />
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_market_requirement_search" model="ir.ui.view">
+        <field name="name">vnfield.market.requirement.search</field>
+        <field name="model">vnfield.market.requirement</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title" />
+                <field name="contractor_id" />
+                <field name="work_category" />
+                <field name="location" />
+
+                <filter string="Waiting Match" name="waiting_match"
+                    domain="[('state', '=', 'waiting_match')]" />
+                <filter string="Matched" name="matched" domain="[('state', '=', 'matched')]" />
+                <filter string="Inactive" name="inactive" domain="[('state', '=', 'inactive')]" />
+
+                <separator />
+                <filter string="My Requirements" name="my_requirements"
+                    domain="[('contractor_id.user_ids', 'in', uid)]" />
+
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}" />
+                    <filter string="Contractor" name="group_contractor"
+                        context="{'group_by': 'contractor_id'}" />
+                    <filter string="Work Type" name="group_category"
+                        context="{'group_by': 'work_category'}" />
+                    <filter string="Start Month" name="group_start_month"
+                        context="{'group_by': 'start_date:month'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_market_requirement" model="ir.actions.act_window">
+        <field name="name">Yêu cầu thuê ngoài</field>
+        <field name="res_model">vnfield.market.requirement</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="context">{'search_default_waiting_match': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Tạo yêu cầu thuê ngoài đầu tiên!
+            </p>
+            <p>
+                Quản lý các yêu cầu thuê ngoài công việc trong lĩnh vực xây dựng.
+                Hệ thống sẽ tự động tìm kiếm và gợi ý các nhà thầu phù hợp.
+            </p>
+        </field>
+    </record>
+
+</odoo>

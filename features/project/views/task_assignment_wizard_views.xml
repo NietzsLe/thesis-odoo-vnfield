@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ====================================== -->
+    <!-- TASK ASSIGNMENT WIZARD VIEWS          -->
+    <!-- ====================================== -->
+
+    <!-- Task Assignment Wizard Form View -->
+    <record id="view_task_assignment_wizard_form" model="ir.ui.view">
+        <field name="name">vnfield.task.assignment.wizard.form</field>
+        <field name="model">vnfield.task.assignment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Task Assignment">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="task_id" readonly="1" />
+                            <field name="assigner_id" readonly="1" />
+                            <field name="verifier_id" />
+                        </group>
+                        <group>
+                            <field name="is_outsourced" />
+                            <field name="contractor_assignee_id" invisible="is_outsourced" />
+                            <field name="assignee_id" invisible="is_outsourced" />
+                            <field name="outsource_project_id" invisible="not is_outsourced" />
+                        </group>
+                    </group>
+
+                    <!-- Outsource Remote Requirement Section -->
+                    <group string="Remote Requirement" invisible="not is_outsourced">
+                        <div class="oe_left">
+                            <button name="action_create_remote_requirement"
+                                type="object"
+                                string="Create Remote Requirement"
+                                class="btn-primary"
+                                help="Create a remote requirement for this outsourced task" />
+                        </div>
+                    </group>
+
+                    <!-- Hidden computed fields -->
+                    <field name="project_contractor_ids" invisible="1" />
+                    <field name="project_user_ids" invisible="1" />
+                </sheet>
+                <footer>
+                    <button name="action_assign" type="object" string="Assign" class="btn-primary" />
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Task Assignment Wizard Action -->
+    <record id="action_task_assignment_wizard" model="ir.actions.act_window">
+        <field name="name">Task Assignment</field>
+        <field name="res_model">vnfield.task.assignment.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_task_id': active_id}</field>
+    </record>
+
+</odoo>

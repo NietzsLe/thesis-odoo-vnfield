@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!--═════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+        ═                                       ⏰ TEAM LIFECYCLE MANAGEMENT CRON                                          ═
+        ═════════════════════════════════════════════════════════════════════════════════════════════════════════════════-->
+
+        <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+        <!-- ▶ TEAM LIFECYCLE SYNC CRON JOB                                                                          -->
+        <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+        <record id="cron_team_lifecycle_sync" model="ir.cron">
+            <field name="name">Team Lifecycle Synchronization</field>
+            <field name="model_id" ref="model_vnfield_team" />
+            <field name="state">code</field>
+            <field name="code">model.cron_sync_team_lifecycle()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True" />
+            <field name="doall" eval="False" />
+            <field name="nextcall"
+                eval="(DateTime.now() + timedelta(hours=1)).strftime('%Y-%m-%d %H:%M:%S')" />
+            <field name="user_id" ref="base.user_root" />
+            <field name="priority">5</field>
+        </record>
+
+    </data>
+</odoo>
+
+<!--═════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+═                                      🔗 CRON JOB DESCRIPTION                                                        ═
+═════════════════════════════════════════════════════════════════════════════════════════════════════════════════-->
+
+<!--
+📋 CRON JOB CONFIGURATION:
+
+Name: Team Lifecycle Synchronization
+Purpose: Định kỳ đồng bộ team states với project lifecycle để đảm bảo teams tự động ngừng hoạt động
+khi projects kết thúc
+
+Schedule:
+- Interval: 1 day (chạy hàng ngày)
+- Next Call: 1 giờ sau khi system start
+- Number of calls: -1 (unlimited, chạy vô hạn)
+- Priority: 5 (medium priority)
+
+Execution:
+- Model: vnfield.team
+- Method: cron_sync_team_lifecycle()
+- User: base.user_root (system user)
+- State: code (execute Python code)
+
+Business Logic:
+- Tìm tất cả active teams (draft, active, inactive states)
+- Kiểm tra project_id state cho mỗi team
+- So sánh auto_state với current state
+- Cập nhật team state nếu khác auto_state
+- Log số lượng teams được sync
+
+Workflow Integration:
+- Teams sẽ tự động chuyển sang 'inactive' khi project completed
+- Teams sẽ tự động chuyển sang 'disbanded' khi project cancelled  
+- Teams sẽ tự động chuyển sang 'active' khi project in_progress
+- Message posting cho mỗi lifecycle change
+
+Safety Features:
+- doall=False: không chạy lại missed jobs
+- Chỉ update teams có project_id != False
+- Log chi tiết cho monitoring
+- Error handling trong method execution
+
+Dependencies:
+- Requires vnfield.team model
+- Requires vnfield.project model với state field
+- Requires proper @api.depends trên computed fields
+- Integration với Odoo message system
+-->

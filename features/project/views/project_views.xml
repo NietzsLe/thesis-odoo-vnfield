@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT TREE VIEW                                                                                     -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_project_tree" model="ir.ui.view">
+        <field name="name">vnfield.project.tree</field>
+        <field name="model">vnfield.project</field>
+        <field name="arch" type="xml">
+            <tree string="Projects" decoration-success="state == 'in_progress'"
+                decoration-muted="state == 'completed'" decoration-warning="state == 'draft'">
+                <field name="name" />
+                <field name="main_contractor_id" />
+                <field name="owner_contractor_id" />
+                <field name="outsourced_task_id" readonly="1" />
+                <field name="description" />
+                <field name="state" decoration-success="state == 'in_progress'"
+                    decoration-muted="state == 'completed'"
+                    decoration-warning="state == 'draft'" />
+                <field name="start_date" />
+                <field name="end_date" />
+                <field name="budget" />
+                <field name="invitation_count" />
+            </tree>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT FORM VIEW                                                                                     -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_project_form" model="ir.ui.view">
+        <field name="name">vnfield.project.form</field>
+        <field name="model">vnfield.project</field>
+        <field name="arch" type="xml">
+            <form string="Project">
+                <header>
+                    <div style="display: flex; gap: 8px;">
+                        <button name="action_invite_contractor" type="object"
+                            string="🤝 Invite Contractor" class="btn-primary" />
+                        <button name="action_view_invitations" type="object"
+                            string="📋 View Invitations" class="btn-secondary" />
+                        <button name="action_view_contractors" type="object"
+                            string="👥 View Contractors" class="btn-info" />
+                        <button name="action_view_tasks" type="object"
+                            string="📝 View Tasks" class="btn-info" />
+                        <button name="action_view_members" type="object"
+                            string="👤 View Members" class="btn-info" />
+                    </div>
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,in_progress,completed,cancelled" />
+                    <!-- Add invisible fields for conditions -->
+                    <field name="task_count" invisible="1" />
+                    <field name="invitation_count" invisible="1" />
+                    <field name="contractor_ids" invisible="1" />
+                </header>
+
+                <sheet>
+                    <div
+                        style="background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                        <!-- Smart buttons for statistics -->
+
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" class="o_text_overflow"
+                                    placeholder="Project Name..." />
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group name="basic_info" string="📋 Basic Information">
+                                <field name="main_contractor_id"
+                                    domain="[('id', 'in', contractor_ids)]" />
+                                <field name="owner_contractor_id" options="{'no_create': True}"
+                                    readonly="1" required="0" />
+                                <field name="outsourced_task_id" readonly="1" widget="statinfo"
+                                    options="{'no_label': True}" invisible="not outsourced_task_id" />
+                                <field name="is_outsourced" />
+                                <field name="project_type" widget="radio"
+                                    help="Internal: chỉ internal teams. Shared: external + shared teams" />
+                                <field name="external_id" invisible="project_type != 'shared'" />
+                                <field name="description" />
+                                <field name="budget" />
+                            </group>
+
+                            <group name="dates" string="📅 Schedule">
+                                <field name="start_date" />
+                                <field name="end_date" />
+                                <field name="invitation_count" readonly="1" />
+                            </group>
+                        </group>
+
+                        <!-- Contractor Participation Section -->
+                    </div>
+                    <notebook>
+                        <page string="👥 Contractors" name="contractors">
+                            <group string="📊 Contractor Information">
+                                <field name="contractor_ids" widget="many2many_tags"
+                                    readonly="1"
+                                    string="Participating Contractors"
+                                    help="Contractors can only be added through invitation process" />
+                            </group>
+
+                            <div class="alert alert-info mt8 mb16"
+                                style="padding: 12px; border-radius: 8px; background: #e3f2fd; border: 1px solid #90caf9;">
+                                <i class="fa fa-info-circle"
+                                    style="margin-right: 8px; color: #1976d2;"></i>
+                                <strong>Lưu ý:</strong>
+                                Không thể thêm nhà thầu trực tiếp. Hãy sử dụng chức năng "Invite New
+                                Contractor" để gửi lời mời tham gia dự án. </div>
+
+                            <!-- <div class="mt16" style="display: flex; gap: 12px;">
+                                <button name="action_invite_contractor" type="object"
+                                    string="📨 Invite New Contractor" class="btn-primary" />
+                                <button name="action_view_invitations" type="object"
+                                    string="📋 View Invitations" class="btn-secondary" />
+                                <button name="action_view_contractors" type="object"
+                                    string="👥 View Contractors" class="btn-info"
+                                    invisible="not contractor_ids" />
+                            </div> -->
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT ACTION                                                                                        -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="action_vnfield_project" model="ir.actions.act_window">
+        <field name="name">Projects</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vnfield.project</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first project!
+            </p>
+            <p>
+                Projects manage work assignments and track progress across teams and
+                contractors.
+            </p>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT FORM ACTION (for reference from other modules)                                               -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="action_vnfield_project_form" model="ir.actions.act_window">
+        <field name="name">Project</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">vnfield.project</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT KANBAN VIEW                                                                                   -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_project_kanban" model="ir.ui.view">
+        <field name="name">vnfield.project.kanban</field>
+        <field name="model">vnfield.project</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name" />
+                <field name="main_contractor_id" />
+                <field name="owner_contractor_id" />
+                <field name="project_type" />
+                <field name="external_id" />
+                <field name="description" />
+                <field name="state" />
+                <field name="budget" />
+                <field name="start_date" />
+                <field name="end_date" />
+                <field name="invitation_count" />
+                <field name="task_count" />
+                <field name="contractor_ids" />
+                <field name="outsourced_task_id"
+                    readonly="1" />
+                <field name="is_outsourced" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <!-- Set variables from record fields -->
+                        <t t-set="name" t-value="record.name.value" />
+                        <t t-set="main_contractor_name"
+                            t-value="record.main_contractor_id.value || ''" />
+                        <t t-set="owner_name" t-value="record.owner_contractor_id.value || ''" />
+                        <t t-set="project_type" t-value="record.project_type.raw_value" />
+                        <t t-set="external_id" t-value="record.external_id.value || ''" />
+                        <t t-set="description" t-value="record.description.value || ''" />
+                        <t t-set="is_outsourced" t-value="record.is_outsourced.raw_value" />
+                        <t t-set="outsourced_task_name"
+                            t-value="record.outsourced_task_id.value ? record.outsourced_task_id.value.display_name : ''" />
+                        <t t-if="outsourced_task_name">
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">Outsource
+                                    Task: </span>
+                                <span style="font-weight: 500; color: #333;">
+                                    <t t-out="outsourced_task_name" />
+                                </span>
+                            </div>
+                        </t>
+                        <t t-set="state" t-value="record.state.raw_value" />
+                        <t t-set="budget" t-value="record.budget.value || 0" />
+                        <t t-set="invitation_count" t-value="record.invitation_count.value || 0" />
+                        <t t-set="task_count" t-value="record.task_count.value || 0" />
+                        <t t-set="start_date" t-value="record.start_date.value" />
+                        <t t-set="end_date" t-value="record.end_date.value" />
+                        <t t-set="contractor_ids" t-value="record.contractor_ids.raw_value || []" />
+
+                        <div class="oe_kanban_card"
+                            style="background: #fff; border: 1px solid #ddd; padding: 12px; cursor: pointer; border-radius: 12px;">
+                            <div class="oe_kanban_global_click"></div>
+
+                            <!-- Header with Project Name and Badges -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                <div style="flex: 1; min-width: 0; margin-right: 8px;">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">Tên
+                                        dự án: </span>
+                                    <span style="font-weight: bold; font-size: 1.05em; color: #333;">
+                                        <t t-out="name" />
+                                    </span>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <!-- Project Type Badge -->
+                                    <span class="badge"
+                                        t-attf-style="padding: 3px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold; background: {{ project_type == 'internal' ? '#1976d2' : '#ff9800' }};">
+                                        <t t-if="project_type == 'internal'">Internal</t>
+                                        <t t-else="">Shared</t>
+                                    </span>
+                                    <!-- State Badge -->
+                                    <span class="badge"
+                                        t-attf-style="padding: 3px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold; background: {{ state == 'in_progress' ? '#43a047' : (state == 'completed' ? '#4caf50' : (state == 'draft' ? '#ff9800' : (state == 'cancelled' ? '#f44336' : '#9e9e9e'))) }};">
+                                        <t t-out="record.state.value" />
+                                    </span>
+                                    <!-- Outsourced badge -->
+                                    <t t-if="is_outsourced">
+                                        <span class="badge"
+                                            t-attf-style="padding: 3px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold; background: #d32f2f; margin-left: 4px;">
+                                            Outsourced
+                                        </span>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Main Contractor Info -->
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">Nhà
+                                    thầu chính: </span>
+                                <span style="font-weight: 500; color: #333;">
+                                    <t t-out="main_contractor_name || 'Chưa có'" />
+                                </span>
+                            </div>
+                            <!-- Owner Info -->
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">Chủ
+                                    sở hữu: </span>
+                                <span style="font-weight: 500; color: #333;">
+                                    <t t-out="owner_name || 'Chưa có'" />
+                                </span>
+                            </div>
+
+                            <!-- Description -->
+                            <div t-if="description" style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">Mô
+                                    tả: </span>
+                                <span style="color: #666; font-size: 0.9em; line-height: 1.3;">
+                                    <t t-out="description" />
+                                </span>
+                            </div>
+
+                            <!-- External ID (only for shared projects) -->
+                            <div t-if="external_id and project_type == 'shared'"
+                                style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">External
+                                    ID: </span>
+                                <span style="color: #666; font-size: 0.9em; font-family: monospace;">
+                                    <t t-out="external_id" />
+                                </span>
+                            </div>
+
+                            <!-- Project Details Row -->
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                <!-- Dates and Budget -->
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; flex: 1;">
+                                    <div t-if="start_date" style="color: #888; font-size: 0.8em;">
+                                        Bắt đầu: <span style="color: #333; font-weight: 500;">
+                                            <t t-out="start_date" />
+                                        </span>
+                                    </div>
+                                    <div t-if="end_date" style="color: #888; font-size: 0.8em;"> Kết
+                                        thúc: <span style="color: #333; font-weight: 500;">
+                                            <t t-out="end_date" />
+                                        </span>
+                                    </div>
+                                    <div t-if="budget and budget > 0"
+                                        style="color: #888; font-size: 0.8em;"> Ngân sách: <span
+                                            style="color: #f57c00; font-weight: 500;">
+                                            <t t-out="budget" />
+                                        </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Statistics Row -->
+                            <div
+                                style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.85em; gap: 16px;">
+                                <div style="display: flex; gap: 16px; flex: 1;">
+                                    <div style="color: #666;">
+                                        <span style="color: #888;">Công việc: </span>
+                                        <span style="font-weight: bold; color: #1976d2;">
+                                            <t t-out="task_count" />
+                                        </span>
+                                    </div>
+                                    <div style="color: #666;">
+                                        <span style="color: #888;">Lời mời: </span>
+                                        <span style="font-weight: bold; color: #43a047;">
+                                            <t t-out="invitation_count" />
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div style="margin-top: 12px; display: flex; gap: 8px;">
+                                <button class="btn btn-primary btn-sm"
+                                    name="action_invite_contractor" type="object"
+                                    style="padding: 4px 8px; font-size: 0.8em;"
+                                    title="Mời nhà thầu tham gia dự án">
+                                    Mời nhà thầu
+                                </button>
+                                <button class="btn btn-secondary btn-sm"
+                                    name="action_view_invitations" type="object"
+                                    style="padding: 4px 8px; font-size: 0.8em;"
+                                    title="Xem danh sách lời mời">
+                                    Xem lời mời
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+    <!-- ▶ PROJECT SEARCH VIEW                                                                                   -->
+    <!--
+        ─────────────────────────────────────────────────────────────────────────────────────────────────── -->
+
+    <record id="view_vnfield_project_search" model="ir.ui.view">
+        <field name="name">vnfield.project.search</field>
+        <field name="model">vnfield.project</field>
+        <field name="arch" type="xml">
+            <search string="Search Projects">
+                <field name="name" />
+                <field name="description" />
+                <field name="main_contractor_id" />
+                <field name="owner_contractor_id" />
+
+                <!-- Filters -->
+                <separator />
+                <filter string="My Projects" name="my_projects"
+                    domain="[('owner_contractor_id.user_ids', 'in', [uid])]" />
+                <filter string="Projects I'm In" name="participating"
+                    domain="[('contractor_ids.user_ids', 'in', [uid])]" />
+
+                <separator />
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]" />
+                <filter string="In Progress" name="in_progress"
+                    domain="[('state', '=', 'in_progress')]" />
+                <filter string="Completed" name="completed"
+                    domain="[('state', '=', 'completed')]" />
+                <filter string="On Hold" name="on_hold" domain="[('state', '=', 'on_hold')]" />
+                <filter string="Cancelled" name="cancelled"
+                    domain="[('state', '=', 'cancelled')]" />
+
+                <!-- Group By -->
+                <separator />
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_state" domain="[]"
+                        context="{'group_by': 'state'}" />
+                    <filter string="Owner" name="group_owner" domain="[]"
+                        context="{'group_by': 'owner_contractor_id'}" />
+                    <filter string="Start Date" name="group_start_date" domain="[]"
+                        context="{'group_by': 'start_date'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

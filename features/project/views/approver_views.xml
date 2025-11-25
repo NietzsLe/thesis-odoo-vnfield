@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Approver Tree & Form -->
+    <record id="view_approver_tree" model="ir.ui.view">
+        <field name="name">vnfield.approver.tree</field>
+        <field name="model">vnfield.approver</field>
+        <field name="arch" type="xml">
+            <tree string="Approvers" decoration-success="decision == 'approved'"
+                decoration-danger="decision == 'rejected'"
+                decoration-warning="decision == 'delegated'"
+                decoration-muted="decision == 'pending'">
+                <field name="step_id" />
+                <field name="approver_name" />
+                <field name="user_id" />
+                <field name="team_id" />
+                <field name="contractor_id" />
+                <field name="role" />
+                <field name="decision" widget="badge"
+                    decoration-success="decision == 'approved'"
+                    decoration-danger="decision == 'rejected'"
+                    decoration-warning="decision == 'delegated'"
+                    decoration-info="decision == 'pending'" />
+                <field name="decision_date" />
+                <field name="delegated_to_user_id" invisible="decision != 'delegated'" />
+
+                <!-- Action Buttons -->
+                <button name="action_approve" type="object" string="✅ Approve"
+                    class="btn-sm btn-success" invisible="decision != 'pending'" />
+                <button name="action_reject" type="object" string="🚫 Reject"
+                    class="btn-sm btn-danger" invisible="decision != 'pending'" />
+                <button name="action_reset" type="object" string="🔄 Reset"
+                    class="btn-sm btn-secondary" invisible="decision == 'pending'" />
+            </tree>
+        </field>
+    </record>
+    <record id="view_approver_form" model="ir.ui.view">
+        <field name="name">vnfield.approver.form</field>
+        <field name="model">vnfield.approver</field>
+        <field name="arch" type="xml">
+            <form string="Approver">
+                <header>
+                    <!-- Action Buttons -->
+                    <button name="action_approve" type="object" string="✅ Approve"
+                        class="btn-success"
+                        invisible="decision != 'pending'" />
+                    <button name="action_reject" type="object" string="🚫 Reject" class="btn-danger"
+                        invisible="decision != 'pending'" />
+                    <button name="action_reset" type="object" string="🔄 Reset"
+                        class="btn-secondary"
+                        invisible="decision == 'pending'" />
+                    <field name="decision" widget="statusbar"
+                        statusbar_visible="pending,approved,rejected,delegated" />
+                </header>
+                <sheet>
+                    <div
+                        style="background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="oe_title">
+                            <h1>
+                                <span class="o_form_label">👤 Approver Configuration</span>
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group name="basic_info" string="📋 Basic Information">
+                                <field name="step_id" options="{'no_create': True}" />
+                                <field name="approver_type" widget="radio" />
+                                <field name="external_id" invisible="approver_type != 'shared'" />
+                                <field name="role" />
+                            </group>
+                            <group name="approver_type" string="👥 Approver Type">
+                                <field name="user_id" options="{'no_create': True}" />
+                                <field name="team_id" options="{'no_create': True}" />
+                                <field name="contractor_id" options="{'no_create': True}" />
+                            </group>
+                        </group>
+
+                        <group>
+                            <group name="decision_info" string="🎯 Decision Information">
+                                <field name="decision_date" readonly="1" />
+                                <field name="delegated_to_user_id"
+                                    invisible="decision != 'delegated'"
+                                    options="{'no_create': True}" />
+                            </group>
+                            <group name="comments" string="💬 Comments">
+                                <field name="decision_comments" nolabel="1"
+                                    placeholder="Enter decision comments..." />
+                            </group>
+                        </group>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Approver Kanban View -->
+    <record id="view_approver_kanban" model="ir.ui.view">
+        <field name="name">vnfield.approver.kanban</field>
+        <field name="model">vnfield.approver</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="step_id" />
+                <field name="user_id" />
+                <field name="team_id" />
+                <field name="contractor_id" />
+                <field name="role" />
+                <field name="decision" />
+                <field name="decision_date" />
+                <field name="delegated_to_user_id" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <!-- Set variables from record fields -->
+                        <t t-set="step_name" t-value="record.step_id.value || ''" />
+                        <t t-set="user_name" t-value="record.user_id.value || ''" />
+                        <t t-set="team_name" t-value="record.team_id.value || ''" />
+                        <t t-set="contractor_name" t-value="record.contractor_id.value || ''" />
+                        <t t-set="role" t-value="record.role.value || ''" />
+                        <t t-set="decision" t-value="record.decision.value || 'pending'" />
+                        <t t-set="delegated_user" t-value="record.delegated_to_user_id.value || ''" />
+
+                        <div
+                            t-attf-class="oe_kanban_card {{ decision == 'approved' ? 'border-success' : (decision == 'rejected' ? 'border-danger' : (decision == 'delegated' ? 'border-warning' : 'border-secondary')) }}"
+                            style="background: #fff; border: 2px solid; padding: 12px; cursor: pointer; border-radius: 12px;">
+                            <div class="oe_kanban_global_click"></div>
+
+                            <!-- Header with Decision Status -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                <div style="flex: 1; min-width: 0; margin-right: 8px;">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">👤
+                                        Approver: </span>
+                                    <span style="font-weight: bold; font-size: 1.05em; color: #333;">
+                                        <t t-if="user_name">
+                                            <t t-out="user_name" />
+                                        </t>
+                                        <t t-elif="team_name">
+                                            <t t-out="team_name" />
+                                        </t>
+                                        <t t-elif="contractor_name">
+                                            <t t-out="contractor_name" />
+                                        </t>
+                                        <t t-else="">No Approver</t>
+                                    </span>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <!-- Decision Status Badge -->
+                                    <span
+                                        t-attf-class="badge {{ decision == 'approved' ? 'bg-success' : (decision == 'rejected' ? 'bg-danger' : (decision == 'delegated' ? 'bg-warning' : 'bg-secondary')) }}"
+                                        style="padding: 4px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold;">
+                                        <t t-if="decision == 'approved'">✅ Approved</t>
+                                        <t t-elif="decision == 'rejected'">🚫 Rejected</t>
+                                        <t t-elif="decision == 'delegated'">🔄 Delegated</t>
+                                        <t t-else="">⏳ Pending</t>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Approver Type Badge -->
+                            <div style="margin-bottom: 8px;">
+                                <span class="badge"
+                                    t-attf-style="padding: 3px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold; background: {{ user_name ? '#1976d2' : (team_name ? '#43a047' : (contractor_name ? '#ff9800' : '#9e9e9e')) }};">
+                                    <t t-if="user_name">👤 User</t>
+                                    <t t-elif="team_name">👥 Team</t>
+                                    <t t-elif="contractor_name">🏢 Contractor</t>
+                                    <t t-else="">❓ Unknown</t>
+                                </span>
+                            </div>
+
+                            <!-- Step Info -->
+                            <div style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">📋
+                                    Step: </span>
+                                <span style="font-weight: 500; color: #333;">
+                                    <t t-out="step_name || 'No Step'" />
+                                </span>
+                            </div>
+
+                            <!-- Role Info -->
+                            <div t-if="role" style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">🎭
+                                    Role: </span>
+                                <span style="color: #666; font-size: 0.9em;">
+                                    <t t-out="role" />
+                                </span>
+                            </div>
+
+                            <!-- Delegation Info -->
+                            <div t-if="decision == 'delegated' and delegated_user"
+                                style="margin-top: 8px; padding: 6px; background: #fff3cd; border-radius: 6px; border-left: 3px solid #ffc107;">
+                                <span style="color: #856404; font-size: 0.85em; font-weight: 500;">🔄
+                                    Delegated to: </span>
+                                <span style="color: #856404; font-size: 0.85em;">
+                                    <t t-out="delegated_user" />
+                                </span>
+                            </div>
+
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+</odoo>

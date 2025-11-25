@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 
+    =====================================
+    🎨 VN FIELD SYNC REQUEST VIEWS
+    =====================================
+    
+    Mô tả:
+        Views cho vnfield.sync.request model
+        Bao gồm kanban, tree, form và search views
+        
+    Tính năng:
+        - Kanban view vớ               <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                View your sync requests
+            </p>
+            <p> View your data synchronization requests here.<br /> You can see the status and details of your
+    requests. </p>
+        </field>     <p class="o_view_nocontent_smiling_face">
+                View your sync requests
+            </p>              V                View all sync requestsew all sync requests<field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                View your sync requests
+            </p>
+            <p> View your data synchronization requests here.<br /> You can see the status and details of your
+    requests. </p>
+        </field>r coding theo state
+        - Tree view với decoration và priority
+        - Form view với workflow buttons
+        - Search view với filters và group by
+        
+    Created: 2025-08-20
+    Author: GitHub Copilot
+    -->
+
+    <!-- =========================================== -->
+    <!-- 📋 TREE VIEW - Danh sách Sync Requests     -->
+    <!-- =========================================== -->
+
+    <record id="view_sync_request_tree" model="ir.ui.view">
+        <field name="name">vnfield.sync.request.tree</field>
+        <field name="model">vnfield.sync.request</field>
+        <field name="arch" type="xml">
+            <tree string="Sync Requests"
+                decoration-success="state == 'approved'"
+                decoration-danger="state == 'rejected'"
+                decoration-muted="not active"
+                create="false"
+                edit="false"
+                delete="false">
+
+                <!-- 📝 CORE INFORMATION -->
+                <field name="activity_name" string="Activity Name" />
+                <field name="description" string="Description" />
+
+                <!-- 📊 STATUS & PROGRESS -->
+                <field name="state" string="Status" widget="badge" />
+
+                <!-- ⏱️ TIME INFORMATION -->
+                <field name="display_create_date" string="Created" />
+
+                <!-- 🎯 ACTION BUTTONS -->
+                <button name="action_approve" type="object"
+                    string="✅ Approve"
+                    class="btn-success btn-sm"
+                    invisible="state != 'draft'"
+                    confirm="Approve this sync request?" />
+
+                <button name="action_reject" type="object"
+                    string="❌ Reject"
+                    class="btn-danger btn-sm"
+                    invisible="state != 'draft'"
+                    confirm="Reject this sync request?" />
+
+                <!-- Hidden fields for decorations and filtering -->
+                <field name="is_active_request" invisible="1" />
+                <field name="create_date" invisible="1" />
+                <field name="active" invisible="1" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- =========================================== -->
+    <!-- 📝 FORM VIEW - Chi tiết Sync Request       -->
+    <!-- =========================================== -->
+
+    <record id="view_sync_request_form" model="ir.ui.view">
+        <field name="name">vnfield.sync.request.form</field>
+        <field name="model">vnfield.sync.request</field>
+        <field name="arch" type="xml">
+            <form string="Sync Request" create="false" edit="false" delete="false">
+                <!-- 📊 STATUSBAR HEADER -->
+                <header>
+                    <!-- Action Buttons -->
+                    <button name="action_approve" type="object"
+                        string="✅ Approve"
+                        class="btn-success"
+                        invisible="state != 'draft'"
+                        confirm="Are you sure you want to approve this sync request?" />
+
+                    <button name="action_reject" type="object"
+                        string="❌ Reject"
+                        class="btn-danger"
+                        invisible="state != 'draft'"
+                        confirm="Are you sure you want to reject this sync request?" />
+
+                    <!-- Archive/Unarchive Buttons -->
+                    <button name="toggle_active" type="object"
+                        string="📦 Archive"
+                        class="btn-warning"
+                        invisible="not active"
+                        confirm="Are you sure you want to archive this sync request?" />
+
+                    <button name="toggle_active" type="object"
+                        string="📤 Unarchive"
+                        class="btn-info"
+                        invisible="active"
+                        confirm="Are you sure you want to unarchive this sync request?" />
+
+                    <!-- Status Bar (Read-only) -->
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,approved,rejected"
+                        readonly="1" />
+                    <field name="active" invisible="1" />
+                </header>
+
+                <!-- 📋 MAIN CONTENT -->
+                <sheet>
+                    <!-- 📌 TITLE SECTION -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="activity_name" readonly="1" />
+                        </h1>
+                    </div>
+
+                    <!-- 📊 BASIC INFORMATION GROUP -->
+                    <group name="basic_info" string="📋 Basic Information">
+                        <group>
+                            <field name="display_create_date" string="Created On" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="is_active_request" string="Currently Active" readonly="1" />
+                        </group>
+                    </group>
+
+                    <!-- 📝 DESCRIPTION -->
+                    <group name="description" string="📝 Description">
+                        <field name="description"
+                            nolabel="1"
+                            readonly="1" />
+                    </group>
+
+                    <!-- 📦 MESSAGE PAYLOAD -->
+                    <group name="payload" string="📦 Message Payload">
+                        <field name="message_payload"
+                            nolabel="1"
+                            readonly="1"
+                            widget="text" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- =========================================== -->
+    <!-- 🎴 KANBAN VIEW - Card view của Sync Requests -->
+    <!-- =========================================== -->
+
+    <record id="view_sync_request_kanban" model="ir.ui.view">
+        <field name="name">vnfield.sync.request.kanban</field>
+        <field name="model">vnfield.sync.request</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column" sample="1"
+                create="false" edit="false" delete="false">
+                <field name="activity_name" />
+                <field name="state" />
+                <field name="description" />
+                <field name="display_create_date" />
+                <field name="is_active_request" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click"
+                            style="border-left: 4px solid #{
+                                 record.state.raw_value === 'completed' ? '4caf50' :
+                                 record.state.raw_value === 'processing' ? '2196f3' :
+                                 record.state.raw_value === 'pending' ? 'ff9800' :
+                                 record.state.raw_value === 'failed' ? 'f44336' :
+                                 record.state.raw_value === 'cancelled' ? '9e9e9e' :
+                                 'ffc107'
+                             }; margin: 6px; border-radius: 8px; padding: 12px;">
+
+                            <!-- 📌 CARD HEADER -->
+                            <div class="oe_kanban_content" style="margin-bottom: 10px;">
+                                <div class="o_kanban_record_top" style="margin-bottom: 8px;">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title"
+                                            style="font-size: 1.1em; color: #2c3e50;">
+                                            <field name="activity_name" />
+                                        </strong>
+                                    </div>
+                                </div>
+
+                                <!--  DESCRIPTION -->
+                                <div t-if="record.description.value"
+                                    style="color: #555; font-size: 0.85em; line-height: 1.3; 
+                                            margin-bottom: 8px; display: -webkit-box; 
+                                            -webkit-line-clamp: 2; -webkit-box-orient: vertical; 
+                                            overflow: hidden;">
+                                    <t t-out="record.description.value" />
+                                </div>
+
+                                <!-- 📊 CARD FOOTER INFO -->
+                                <div class="o_kanban_record_bottom"
+                                    style="border-top: 1px solid #e0e0e0; padding-top: 8px;">
+                                    <div class="oe_kanban_bottom_left">
+                                        <span style="color: #666; font-size: 0.8em;"> 📅 <t
+                                                t-out="record.display_create_date.value" />
+                                        </span>
+                                    </div>
+
+                                    <div class="oe_kanban_bottom_right">
+                                        <!-- Action Buttons for draft requests -->
+                                        <div
+                                            t-if="record.state.raw_value == 'draft'"
+                                            style="margin-right: 8px; display: inline-block;">
+                                            <button name="action_approve" type="object"
+                                                class="btn btn-success btn-sm"
+                                                style="margin-right: 4px; padding: 2px 6px; font-size: 10px;"
+                                                title="Approve Request">✅</button>
+                                            <button name="action_reject" type="object"
+                                                class="btn btn-danger btn-sm"
+                                                style="padding: 2px 6px; font-size: 10px;"
+                                                title="Reject Request">❌</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- =========================================== -->
+    <!-- 🔍 SEARCH VIEW - Tìm kiếm và Filter        -->
+    <!-- =========================================== -->
+
+    <record id="view_sync_request_search" model="ir.ui.view">
+        <field name="name">vnfield.sync.request.search</field>
+        <field name="model">vnfield.sync.request</field>
+        <field name="arch" type="xml">
+            <search string="Search Sync Requests">
+                <!-- 🔍 SEARCH FIELDS -->
+                <field name="activity_name" string="Activity Name"
+                    filter_domain="[('activity_name', 'ilike', self)]" />
+                <field name="description" string="Description"
+                    filter_domain="[('description', 'ilike', self)]" />
+                <field name="state" string="Status" />
+
+                <!-- 🎛️ QUICK FILTERS -->
+                <separator />
+
+                <!-- Archive Filters -->
+                <filter name="active_records" string="Active"
+                    domain="[('active', '=', True)]"
+                    help="Show only active records" />
+                <filter name="archived_records" string="Archived"
+                    domain="[('active', '=', False)]"
+                    help="Show only archived records" />
+
+                <separator />
+
+                <!-- State Filters -->
+                <filter name="draft" string="Draft"
+                    domain="[('state', '=', 'draft')]" />
+                <filter name="approved" string="Approved"
+                    domain="[('state', '=', 'approved')]" />
+                <filter name="rejected" string="Rejected"
+                    domain="[('state', '=', 'rejected')]" />
+
+                <!-- 📊 GROUP BY OPTIONS -->
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status"
+                        context="{'group_by': 'state'}" />
+                    <filter name="group_create_date" string="Creation Date"
+                        context="{'group_by': 'create_date:month'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- =========================================== -->
+    <!-- 🎯 ACTIONS - Window Actions                -->
+    <!-- =========================================== -->
+
+    <!-- Main Action for Sync Requests -->
+    <record id="action_sync_request" model="ir.actions.act_window">
+        <field name="name">Sync Requests</field>
+        <field name="res_model">vnfield.sync.request</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_id" ref="view_sync_request_kanban" />
+        <field name="search_view_id" ref="view_sync_request_search" />
+        <field name="domain">[('active', '=', True)]</field>
+        <field name="context">{
+            'search_default_active_records': 1,
+            'create': False
+            }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                View your sync requests
+            </p>
+            <p> View your data synchronization requests here.<br /> You can see the status and
+                details of your requests. </p>
+        </field>
+    </record>
+
+    <!-- Admin Action (for system administrators) -->
+    <record id="action_sync_request_admin" model="ir.actions.act_window">
+        <field name="name">All Sync Requests (Admin)</field>
+        <field name="res_model">vnfield.sync.request</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="view_id" ref="view_sync_request_kanban" />
+        <field name="search_view_id" ref="view_sync_request_search" />
+        <field name="domain">[('active', '=', True)]</field> <!-- 💡 Only show active requests by
+        default -->
+        <!-- 💡 NOTE(assistant): Admin view but filter active by default -->
+        <field name="context">{
+            'search_default_active_records': 1,
+            'create': False
+            }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                View all sync requests
+            </p>
+            <p> Administrative view of all sync requests in the system.<br /> You can view status
+                and details of all requests. </p>
+        </field>
+    </record>
+
+</odoo>

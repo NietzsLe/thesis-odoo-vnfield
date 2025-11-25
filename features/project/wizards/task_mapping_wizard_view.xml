@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_task_mapping_wizard_form" model="ir.ui.view">
+        <field name="name">vnfield.task.mapping.wizard.form</field>
+        <field name="model">vnfield.task.mapping.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Task Mapping">
+                <group>
+                    <field name="executer_id" />
+                    <field name="contractor_name" />
+                </group>
+                <footer>
+                    <button string="Map" type="object" name="action_map" class="btn-primary" />
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

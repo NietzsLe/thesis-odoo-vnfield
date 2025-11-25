@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 📋 REMOTE CAPACITY PROFILE LIST VIEW -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <record id="view_remote_capacity_profile_tree" model="ir.ui.view">
+            <field name="name">vnfield.market.remote.capacity.profile.tree</field>
+            <field name="model">vnfield.market.remote.capacity.profile</field>
+            <field name="arch" type="xml">
+                <tree string="Remote Capacity Profiles" create="false" edit="true" delete="true">
+                    <header>
+                        <button name="action_open_create_wizard" type="object"
+                            string="Create New Remote Capacity Profile" class="btn-primary"
+                            display="always" />
+                    </header>
+                    <field name="title" />
+                    <field name="subcontractor_name" />
+                    <field name="work_category" />
+                    <field name="experience_years" />
+                    <field name="team_size" />
+                    <field name="current_workload" />
+                    <field name="budget_capacity_min" widget="monetary" />
+                    <field name="budget_capacity_max" widget="monetary" />
+                    <field name="currency_id" invisible="1" />
+                    <field name="state" decoration-success="state == 'waiting_match'"
+                        decoration-primary="state == 'matched'" decoration-muted="state == 'inactive'" />
+                    <field name="available_from" />
+                    <field name="match_count" />
+                    <button name="action_open_form" type="object" icon="fa-external-link"
+                        title="Open Form View" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 📋 REMOTE CAPACITY PROFILE FORM VIEW -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <record id="view_remote_capacity_profile_form" model="ir.ui.view">
+            <field name="name">vnfield.market.remote.capacity.profile.form</field>
+            <field name="model">vnfield.market.remote.capacity.profile</field>
+            <field name="arch" type="xml">
+                <form string="Remote Capacity Profile" create="false" edit="true" delete="true">
+                    <header>
+                        <field name="state" widget="statusbar"
+                            statusbar_visible="draft,active,inactive" />
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="title" placeholder="Remote Capacity Profile Title" />
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group string="Basic Information">
+                                <field name="subcontractor_name" readonly="1" />
+                                <field name="work_category" />
+                                <field name="experience_years" />
+                                <field name="team_size" />
+                                <field name="current_workload" />
+                                <field name="available_from" />
+                                <field name="max_project_duration" />
+                            </group>
+                            <group string="Budget Capacity">
+                                <field name="currency_id" />
+                                <field name="budget_capacity_min" widget="monetary" />
+                                <field name="budget_capacity_max" widget="monetary" />
+                                <field name="match_count" />
+                            </group>
+                        </group>
+
+                        <notebook>
+                            <page string="Description">
+                                <field name="description" widget="html" readonly="1" />
+                            </page>
+                            <page string="Technical Info">
+                                <group>
+                                    <field name="id" readonly="1" />
+                                    <field name="subcontractor_id" readonly="1" />
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🔍 REMOTE CAPACITY PROFILE SEARCH VIEW -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <record id="view_remote_capacity_profile_search" model="ir.ui.view">
+            <field name="name">vnfield.market.remote.capacity.profile.search</field>
+            <field name="model">vnfield.market.remote.capacity.profile</field>
+            <field name="arch" type="xml">
+                <search string="Search Remote Capacity Profiles">
+                    <field name="title" string="Title" filter_domain="[('title', 'ilike', self)]" />
+                    <field name="subcontractor_name" string="Subcontractor"
+                        filter_domain="[('subcontractor_name', 'ilike', self)]" />
+                    <field name="work_category" />
+                    <separator />
+                    <filter string="Waiting Match" name="waiting_match" domain="[('state', '=', 'waiting_match')]" />
+                    <filter string="Matched" name="matched" domain="[('state', '=', 'matched')]" />
+                    <filter string="Inactive" name="inactive" domain="[('state', '=', 'inactive')]" />
+                    <separator />
+                    <filter string="Low Workload" name="low_workload"
+                        domain="[('current_workload', '=', 'low')]" />
+                    <filter string="Medium Workload" name="medium_workload"
+                        domain="[('current_workload', '=', 'medium')]" />
+                    <filter string="High Workload" name="high_workload"
+                        domain="[('current_workload', '=', 'high')]" />
+                    <separator />
+                    <group expand="0" string="Group By">
+                        <filter string="Work Category" name="group_work_category"
+                            context="{'group_by': 'work_category'}" />
+                        <filter string="Current Workload" name="group_workload"
+                            context="{'group_by': 'current_workload'}" />
+                        <filter string="State" name="group_state" context="{'group_by': 'state'}" />
+                        <filter string="Subcontractor" name="group_subcontractor"
+                            context="{'group_by': 'subcontractor_name'}" />
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <!-- ═══════════════════════════════════════════ -->
+        <!-- 🎯 REMOTE CAPACITY PROFILE ACTION -->
+        <!-- ═══════════════════════════════════════════ -->
+
+        <record id="action_remote_capacity_profile" model="ir.actions.act_window">
+            <field name="name">Remote Capacity Profiles</field>
+            <field name="res_model">vnfield.market.remote.capacity.profile</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_remote_capacity_profile_tree" />
+            <field name="search_view_id" ref="view_remote_capacity_profile_search" />
+            <field name="context">{'search_default_waiting_match': 1}</field>
+            <field name="domain">[]</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    No remote capacity profiles found!
+                </p>
+                <p>
+                    Remote capacity profiles are fetched from the integration server in real-time.
+                    Make sure the integration server is configured and accessible.
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

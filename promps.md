@@ -1,0 +1,1 @@
+Hãy tạo một PubSubService như một model kế thừa từ models.TransientModel trong đó có 2 phương thức dùng kafka confluent để produce và consume tin nhắn. Các cấu hình kafka được lưu như các record system parameter. Model này được tạo trong features/shared/models.

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Approval Main Tree & Form -->
+    <record id="view_approval_tree" model="ir.ui.view">
+        <field name="name">vnfield.approval.tree</field>
+        <field name="model">vnfield.approval</field>
+        <field name="arch" type="xml">
+            <tree string="Approvals" decoration-success="state == 'approved'"
+                decoration-warning="state == 'draft'" decoration-info="state == 'in_progress'"
+                decoration-danger="state == 'rejected'">
+                <field name="name" />
+                <field name="project_id" />
+                <field name="submitted_by_user_id" string="Submitted By" />
+                <field name="submitted_as_type" string="As Type" />
+                <field name="state" decoration-success="state == 'approved'"
+                    decoration-warning="state == 'draft'" decoration-info="state == 'in_progress'"
+                    decoration-danger="state == 'rejected'" />
+                <field name="description" />
+            </tree>
+        </field>
+    </record>
+    <record id="view_approval_form" model="ir.ui.view">
+        <field name="name">vnfield.approval.form</field>
+        <field name="model">vnfield.approval</field>
+        <field name="arch" type="xml">
+            <form string="Approval">
+                <!-- 🔒 UI PROTECTION: Fields readonly when state = 'in_progress' -->
+                <header>
+                    <button name="action_send" type="object" string="📤 Send"
+                        class="btn-primary" invisible="state != 'draft'"
+                        help="Gửi approval để bắt đầu quy trình phê duyệt" />
+                    <field name="state" widget="statusbar"
+                        statusbar_visible="draft,in_progress,approved,rejected" />
+                </header>
+                <sheet>
+                    <div
+                        style="background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" class="o_text_overflow"
+                                    placeholder="Approval Name..."
+                                    readonly="state == 'in_progress'" />
+                            </h1>
+                        </div>
+
+                        <group>
+                            <group name="basic_info" string="📋 Basic Information">
+                                <field name="approval_type" widget="radio"
+                                    readonly="state == 'in_progress'" />
+                                <field name="external_id" invisible="approval_type != 'shared'"
+                                    readonly="state == 'in_progress'" />
+                                <field name="project_id" options="{'no_create': True}"
+                                    readonly="state == 'in_progress'" />
+                                <field name="description"
+                                    readonly="state == 'in_progress'" />
+                            </group>
+
+                            <group name="submission_info" string="📤 Submission Information">
+                                <field name="submitted_by_user_id" readonly="1" />
+                                <field name="submitted_as_type" readonly="1" />
+                                <field name="submitted_as_id" readonly="1" />
+                            </group>
+                        </group>
+
+                        <group>
+                            <group name="access_control" string="🔍 Access Control">
+                                <field name="visible_to_user_ids" widget="many2many_tags"
+                                    readonly="1"
+                                    help="Users có quyền xem approval này (computed automatically)" />
+                            </group>
+                        </group>
+
+                    </div>
+                    <notebook>
+                        <page string="📋 Steps">
+
+                            <field name="step_ids"
+                                context="{'default_approval_id': active_id}"
+                                nolabel="1"
+                                readonly="state == 'in_progress'" />
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Approval Kanban View -->
+    <record id="view_approval_kanban" model="ir.ui.view">
+        <field name="name">vnfield.approval.kanban</field>
+        <field name="model">vnfield.approval</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="name" />
+                <field name="state" />
+                <field name="description" />
+                <field name="submitted_by_user_id" />
+                <field name="submitted_as_type" />
+
+                <templates>
+                    <t t-name="kanban-box">
+                        <!-- Set variables from record fields -->
+                        <t t-set="name" t-value="record.name.value" />
+                        <t t-set="description" t-value="record.description.value || ''" />
+                        <t t-set="state" t-value="record.state.raw_value" />
+                        <t t-set="submitted_by" t-value="record.submitted_by_user_id.value || 'N/A'" />
+                        <t t-set="submitted_type" t-value="record.submitted_as_type.value || ''" />
+
+                        <div class="oe_kanban_card"
+                            style="background: #fff; border: 1px solid #ddd; padding: 12px; cursor: pointer; border-radius: 12px;">
+                            <div class="oe_kanban_global_click"></div>
+
+                            <!-- Header with Approval Name and State Badge -->
+                            <div
+                                style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                                <div style="flex: 1; min-width: 0; margin-right: 8px;">
+                                    <span style="color: #888; font-size: 0.85em; font-weight: 400;">📋
+                                        Approval: </span>
+                                    <span style="font-weight: bold; font-size: 1.05em; color: #333;">
+                                        <t t-out="name" />
+                                    </span>
+                                </div>
+                                <div style="display: flex; gap: 6px; align-items: center;">
+                                    <!-- State Badge -->
+                                    <span class="badge"
+                                        t-attf-style="padding: 3px 8px; border-radius: 8px; color: #fff; font-size: 0.75em; font-weight: bold; background: {{ state == 'approved' ? '#43a047' : (state == 'rejected' ? '#f44336' : (state == 'in_progress' ? '#2196f3' : (state == 'draft' ? '#ff9800' : '#9e9e9e'))) }};">
+                                        <t t-out="record.state.value" />
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div t-if="description" style="margin-bottom: 8px;">
+                                <span style="color: #888; font-size: 0.85em; font-weight: 400;">📝
+                                    Mô tả: </span>
+                                <span style="color: #666; font-size: 0.9em; line-height: 1.3;">
+                                    <t t-out="description" />
+                                </span>
+                            </div>
+
+                            <!-- Submission Info -->
+                            <div t-if="submitted_by" style="margin-bottom: 4px;">
+                                <span style="color: #888; font-size: 0.8em; font-weight: 400;">📤
+                                    Submitted by: </span>
+                                <span style="color: #555; font-size: 0.85em;">
+                                    <t t-out="submitted_by" />
+                                    <t t-if="submitted_type"> (<t t-out="submitted_type" />)</t>
+                                </span>
+                            </div>
+
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+</odoo>

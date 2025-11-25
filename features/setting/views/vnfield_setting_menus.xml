@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 
+    ═══════════════════════════════════════════════════════════
+    ═             ⚙️ VNFIELD SETTING - MAIN MENU             ═
+    ═══════════════════════════════════════════════════════════
+    Định nghĩa menu chính cho module VN Field Setting System
+    -->
+
+    <!--
+    🏠 Gán action giao diện tổng quan cho menu chính (action được định nghĩa ở file overview)
+    -->
+    <menuitem id="vnfield_setting_main_menu" name="VN Field Settings" sequence="12" />
+
+    <!-- 
+    ─────────────────────────────────────────────────────────
+    📋 SUBMENU - System Configuration
+    ─────────────────────────────────────────────────────────
+    Menu con cho các cấu hình system của VN Field
+    -->
+
+    <record id="vnfield_setting_config_menu" model="ir.ui.menu">
+        <field name="name">System Configuration</field>
+        <field name="parent_id" ref="vnfield_setting_main_menu" />
+        <field name="sequence">10</field>
+    </record>
+</odoo>

@@ -12,12 +12,12 @@
 #
 #############################################################################
 {
-    "name": "🏗️ VN Field Contractor System (CS)",
+    "name": "VN Field Contractor System (CS)",
     "version": "17.0.2.0.2",
-    "category": "Project Management", 
+    "category": "Project Management",
     "summary": "Multi-site contractor management với Integration System sync",
     "description": """
-        🏗️ VN Field Contractor System (CS)
+        VN Field Contractor System (CS)
         ===================================
         
         ✨ Features:
@@ -38,8 +38,8 @@
     "author": "VN Field Team",
     "website": "https://vnfield.com",
     "depends": [
-        "base", 
-        "mail", 
+        "base",
+        "mail",
     ],
     "external_dependencies": {
         "python": ["confluent_kafka"],
